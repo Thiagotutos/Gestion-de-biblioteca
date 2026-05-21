@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Lógica para agregar
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
     $name = trim($_POST['name']);
     if ($name) {
         $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
@@ -23,19 +23,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
 if (isset($_GET['delete'])) {
     if ($_SESSION['user_role'] === 'Lector') { header('Location: categories.php'); exit; }
     $id = $_GET['delete'];
+    $pdo->prepare("UPDATE books SET category_id = NULL WHERE category_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$id]);
     $_SESSION['success_msg'] = "Categoría eliminada.";
     header('Location: categories.php');
     exit;
 }
 
-$stmt = $pdo->query("SELECT * FROM categories ORDER BY name ASC");
+// Búsqueda y paginación
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$per_page = 20;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page - 1) * $per_page;
+
+$where = '';
+$params = [];
+if ($search !== '') {
+    $where = 'WHERE name LIKE ?';
+    $params = ["%$search%"];
+}
+
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM categories $where");
+$count_stmt->execute($params);
+$total = $count_stmt->fetchColumn();
+$total_pages = max(1, ceil($total / $per_page));
+
+$stmt = $pdo->prepare("SELECT * FROM categories $where ORDER BY name ASC LIMIT $per_page OFFSET $offset");
+$stmt->execute($params);
 $categories = $stmt->fetchAll();
+
+$url_params = [];
+if ($search !== '') $url_params['search'] = $search;
 ?>
 <?php require_once 'includes/sidebar.php'; ?>
 
 <div class="content-header">
     <h2>Gestionar Categorías</h2>
+    <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> categorías</span>
 </div>
 
 <?php if (isset($_SESSION['success_msg'])): ?>
@@ -47,37 +71,56 @@ $categories = $stmt->fetchAll();
 
 <div style="display: flex; gap: 20px;">
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
-    <!-- Formulario para agregar -->
     <div class="form-container" style="flex: 1; height: max-content;">
-        <h3>Agregar Nueva</h3><br>
+        <h3>Agregar Categoría</h3><br>
         <form method="POST">
             <div class="form-group">
                 <label>Nombre de la Categoría</label>
                 <input type="text" name="name" class="form-control" required>
             </div>
-            <button type="submit" name="add_category" class="btn btn-primary">Guardar</button>
+            <button type="submit" name="add_item" class="btn btn-primary">Guardar</button>
         </form>
     </div>
     <?php endif; ?>
 
-    <!-- Tabla -->
     <div style="flex: 2;">
+        <form method="GET" class="search-filters-bar" style="margin-bottom: 15px;" id="searchForm">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar categoría..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
+                <span id="searchSpinner" class="search-spinner" style="display:none;"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <?php if ($search !== ''): ?>
+            <a href="categories.php" class="btn" style="background: #999;">Limpiar</a>
+            <?php endif; ?>
+        </form>
+
+        <div id="searchResults">
         <table class="data-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
+                    <th>Libros</th>
                     <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($categories as $cat): ?>
+                <?php foreach ($categories as $item): 
+                    $book_count = $pdo->prepare("SELECT COUNT(*) FROM books WHERE category_id = ?");
+                    $book_count->execute([$item['id']]);
+                    $count = $book_count->fetchColumn();
+                ?>
                 <tr>
-                    <td><?php echo $cat['id']; ?></td>
-                    <td><?php echo htmlspecialchars($cat['name']); ?></td>
+                    <td><?php echo $item['id']; ?></td>
+                    <td><?php echo htmlspecialchars($item['name']); ?></td>
+                    <td><span class="status-badge status-available"><?php echo $count; ?></span></td>
                     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
                     <td>
-                        <a href="categories.php?delete=<?php echo $cat['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar categoría?');">Borrar</a>
+                        <a href="categories.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar categoría?');">Borrar</a>
                     </td>
                     <?php else: ?>
                     <td>-</td>
@@ -85,11 +128,101 @@ $categories = $stmt->fetchAll();
                 </tr>
                 <?php endforeach; ?>
                 <?php if (empty($categories)): ?>
-                <tr><td colspan="3" style="text-align: center;">No hay categorías.</td></tr>
+                <tr><td colspan="4" style="text-align: center;">No hay categorías.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <?php if ($total_pages > 1): ?>
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?<?php echo http_build_query(array_merge($url_params, ['page' => $page - 1])); ?>" class="pagination-btn">&laquo;</a>
+            <?php endif; ?>
+            <?php for ($i = max(1, $page-3); $i <= min($total_pages, $page+3); $i++): ?>
+                <a href="?<?php echo http_build_query(array_merge($url_params, ['page' => $i])); ?>" class="pagination-btn <?php echo $i === $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+            <?php if ($page < $total_pages): ?>
+                <a href="?<?php echo http_build_query(array_merge($url_params, ['page' => $page + 1])); ?>" class="pagination-btn">&raquo;</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+        </div>
     </div>
 </div>
+
+<script>
+(function() {
+    var searchInput = document.getElementById('liveSearchInput');
+    var resultsContainer = document.getElementById('searchResults');
+    var resultCount = document.getElementById('result-count');
+    var spinner = document.getElementById('searchSpinner');
+    var debounceTimer = null;
+    var currentXHR = null;
+    
+    function doLiveSearch() {
+        var query = searchInput.value;
+        spinner.style.display = 'inline-block';
+        if (currentXHR) { currentXHR.abort(); }
+        if (window.XMLHttpRequest) { currentXHR = new XMLHttpRequest(); }
+        else { currentXHR = new ActiveXObject("Microsoft.XMLHTTP"); }
+        
+        var url = 'search_ajax.php?type=categories&q=' + encodeURIComponent(query) + '&page=1';
+        currentXHR.onreadystatechange = function() {
+            if (currentXHR.readyState === 4) {
+                spinner.style.display = 'none';
+                if (currentXHR.status === 200) {
+                    resultsContainer.innerHTML = currentXHR.responseText;
+                    var countEl = document.getElementById('ajax-count');
+                    if (countEl && resultCount) { resultCount.textContent = countEl.textContent; }
+                    bindPaginationLinks();
+                }
+            }
+        };
+        currentXHR.open('GET', url, true);
+        currentXHR.send();
+    }
+    
+    function bindPaginationLinks() {
+        var links = resultsContainer.getElementsByClassName('pagination-btn');
+        for (var i = 0; i < links.length; i++) {
+            links[i].onclick = function(e) {
+                e.preventDefault();
+                var pageNum = this.getAttribute('data-page');
+                if (pageNum) { loadPage(parseInt(pageNum)); }
+                return false;
+            };
+        }
+    }
+    
+    function loadPage(pageNum) {
+        var query = searchInput.value;
+        spinner.style.display = 'inline-block';
+        if (currentXHR) { currentXHR.abort(); }
+        if (window.XMLHttpRequest) { currentXHR = new XMLHttpRequest(); }
+        else { currentXHR = new ActiveXObject("Microsoft.XMLHTTP"); }
+        var url = 'search_ajax.php?type=categories&q=' + encodeURIComponent(query) + '&page=' + pageNum;
+        currentXHR.onreadystatechange = function() {
+            if (currentXHR.readyState === 4) {
+                spinner.style.display = 'none';
+                if (currentXHR.status === 200) {
+                    resultsContainer.innerHTML = currentXHR.responseText;
+                    var countEl = document.getElementById('ajax-count');
+                    if (countEl && resultCount) { resultCount.textContent = countEl.textContent; }
+                    bindPaginationLinks();
+                }
+            }
+        };
+        currentXHR.open('GET', url, true);
+        currentXHR.send();
+    }
+    
+    if (searchInput) {
+        searchInput.onkeyup = function() {
+            if (debounceTimer) { clearTimeout(debounceTimer); }
+            debounceTimer = setTimeout(function() { doLiveSearch(); }, 500);
+        };
+    }
+})();
+</script>
 
 <?php require_once 'includes/footer.php'; ?>

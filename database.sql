@@ -12,24 +12,52 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tablas relacionales para Libros
+CREATE TABLE IF NOT EXISTS categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS authors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS publishers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS racks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
 -- Tabla de Libros
 CREATE TABLE IF NOT EXISTS books (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
-    autor VARCHAR(255) NOT NULL,
+    author_id INT,
     isbn VARCHAR(50),
-    editorial VARCHAR(100),
-    categoria VARCHAR(100),
-    ubicacion VARCHAR(50), -- Ej: Estante R1, R2
+    publisher_id INT,
+    category_id INT,
+    rack_id INT,
+    imagen VARCHAR(255) DEFAULT NULL,
     estado ENUM('Disponible', 'Prestado', 'Extraviado') NOT NULL DEFAULT 'Disponible',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
+    FOREIGN KEY (publisher_id) REFERENCES publishers(id) ON DELETE SET NULL,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (rack_id) REFERENCES racks(id) ON DELETE SET NULL
 );
 
 -- Tabla de Transacciones (Préstamos, Devoluciones, etc.)
 CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     book_id INT NOT NULL,
-    user_id INT NOT NULL, -- Quien retiró el libro
+    user_id INT NULL, -- Puede ser null si se usa lector_nombre
+    lector_nombre VARCHAR(255) NULL, -- Nombre de quien retiró
+    lector_documento VARCHAR(50) NULL, -- Documento de quien retiró
     librarian_id INT NOT NULL, -- Quien gestionó la acción
     accion ENUM('Prestamo', 'Devolucion', 'Ingreso') NOT NULL,
     fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -50,18 +78,15 @@ CREATE TABLE IF NOT EXISTS events_schedule (
 );
 
 -- Datos de prueba para Administrador (La contraseña debería estar hasheada con password_hash en PHP)
--- pass temporal: 'admin123' (hash simplificado para ej: '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' -> 'password')
+-- pass temporal: 'admin123' (hash simplificado para ej: '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u' -> 'admin123')
 INSERT IGNORE INTO users (nombre, rol, email, password) VALUES 
-('Admin Biblioteca', 'Administrador', 'admin@biblioteca.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Lector Prueba', 'Lector', 'lector@biblioteca.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
-
--- Libros de prueba
-INSERT IGNORE INTO books (titulo, autor, isbn, editorial, categoria, ubicacion, estado) VALUES
-('El Quijote', 'Miguel de Cervantes', '978-84-15-200', 'Santillana', 'Literatura', 'Estante R1', 'Disponible'),
-('Cálculo Integral', 'James Stewart', '978-0-534-39321-2', 'Cengage', 'Matemáticas', 'Estante R2', 'Prestado'),
-('PHP y MySQL', 'Laura Thomson', '978-84-415-3841-8', 'Anaya', 'Programación', 'Estante R3', 'Extraviado');
+('Admin Biblioteca', 'Administrador', 'admin@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u'),
+('Lector Prueba', 'Lector', 'lector@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u');
 
 -- Eventos de prueba
 INSERT IGNORE INTO events_schedule (tipo, titulo, descripcion, fecha_inicio, fecha_fin) VALUES
 ('Feria', 'Feria del Libro Anual', 'Ven y descubre nuevos títulos.', '2026-05-10 09:00:00', '2026-05-15 18:00:00'),
 ('Horario', 'Horario de Verano', 'La biblioteca estará abierta en estos horarios especiales.', '2026-01-01 08:00:00', '2026-03-31 14:00:00');
+
+-- NOTA: Los datos de libros se importan ejecutando migrate_aguapay.php
+-- que lee el archivo ISO 2709 del sistema Aguapay (carpeta 20260512/basedato.iso)

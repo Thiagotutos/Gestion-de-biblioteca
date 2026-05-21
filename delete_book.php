@@ -14,11 +14,24 @@ if ($_SESSION['user_role'] === 'Lector') {
 
 $id = $_GET['id'] ?? null;
 if ($id) {
+    // Eliminar imagen asociada si existe
+    $stmt = $pdo->prepare("SELECT imagen FROM books WHERE id = ?");
+    $stmt->execute([$id]);
+    $book = $stmt->fetch();
+    if ($book && $book['imagen']) {
+        $imgPath = __DIR__ . '/uploads/books/' . $book['imagen'];
+        if (file_exists($imgPath)) unlink($imgPath);
+    }
+
     $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
     $stmt->execute([$id]);
     $_SESSION['success_msg'] = "Libro eliminado exitosamente.";
 }
 
-header('Location: books.php');
+if (isset($_SERVER['HTTP_REFERER'])) {
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
+} else {
+    header('Location: books.php');
+}
 exit;
 ?>
