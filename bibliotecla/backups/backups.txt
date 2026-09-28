@@ -1,1 +1,0 @@
-En este directorio se crean los backups del sistema. Si se usa la opción backups diarios automáticos, el sistema creará una carpeta para cada día.
