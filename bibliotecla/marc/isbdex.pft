@@ -1,0 +1,537 @@
+proc(,
+
+
+'d*',
+
+'a001%',v001,'%',
+'a005%',v005,'%',
+'a008%',v008,'%',
+if v902:'7' then 'a999%a%' else 'a999%m%',fi,
+
+if p(v020) then
+,(,
+ 'a020%',
+   if right(v020,1)='.' then left(v020,size(v020)-1) else v020, fi,
+ '%',
+,),
+fi,
+
+'a040%',v040,'%',
+
+
+if p(v080) then
+,(,
+   'a080%',v80,'%',
+,),
+fi,
+
+
+if p(v100) then
+'a100%',
+  replace(
+  replace(
+  replace(v100,'^c',',^c'),
+               '^d',',^d'),
+               '^e',',^e'),
+  if NOT '.)-?!':right(v100,1) then '.' fi,
+'%',
+fi,
+
+
+
+if p(v110) then
+'a110%',
+  replace(
+  replace(v110,'^b','.^b'),
+               '^e',',^e'),
+  if NOT '.)-?!':right(v110,1) then '.' fi,
+'%',
+fi,
+
+
+
+if p(v111) then
+'a111%  ',
+  '^a',v111^a,
+  "^n("v111^n,
+  if p(v111^d) then
+     if p(v111^n) then ' :^d' else '^d(' fi,
+     v111^d,
+  fi,
+  if p(v111^c) then
+     if p(v111^n) OR p(v111^d) then ' :^c' else '^c(' fi,
+     v111^c,
+  fi,
+  if s(v111^n,v111^d,v111^c)>'' then ')',
+     else if right(v111,1)<>'.' then '.' fi,
+  fi,
+'%',
+fi,
+
+
+if p(v130) then
+  'a130%',
+    replace(replace(v130,'^n','.^n'),'^p','.^p'),   /* ??? */
+  '%',
+fi,
+
+
+if p(v240) then
+  'a240%',
+    replace(v240,'^n','.^n'),   /* ??? */
+  '%',
+fi,
+
+
+if p(v245) then
+'a245%',
+
+   replace(
+   replace(
+   replace(v245,'^n','.^n'),
+                '^c',' /^c'),
+                '^b',s(if NOT v245:' =^b' AND NOT v245:' ;^b' then ' :^b' else '^b' fi)),
+   /*
+   v245^*,
+   "^a",v245^a,
+   ".^n",v245^n,
+   if p(v245^b) then
+     if NOT v245:' =^b' AND NOT v245:' ;^b' then ' :^b' else '^b' fi,
+     v245^b,
+   fi,
+   " /^c",v245^c,
+   */
+   if right(v245,1)<>'.' then '.' fi, 
+'%',
+fi,
+
+
+
+if p(v250) then
+  'a250%',v250,'%',
+fi,
+
+
+
+if p(v260) then
+'a260%  ', if p(v260^a) then '^' fi,
+  replace(
+  replace(
+  replace(
+  replace(
+  replace(
+  replace(s(if p(v260^a) then v260*3 else v260*2 fi),'^a',' ;^a'),
+                 '^b',' :^b'),
+                 '^c',',^c'),
+                 '^e','^e('),
+                 '^f',s(if p(v260^e) then ' :^f' else '^f(' fi)),
+                 '^g',s(if p(v260^e) OR p(v260^f) then ',^g' else '^g(' fi)),
+  if s(v260^e,v260^f,v260^g)>'' then ')', fi,
+
+
+   if not '.?!-)],':right(v260,1) AND s(v260^e,v260^f,v260^g)='' then '.' fi,
+'%',
+fi,
+
+
+
+if p(v300) then
+'a300%',
+   replace(
+   replace(v300,'^b',' :^b'),
+                '^e',' +^e'),
+   if NOT '.?!-)':right(v300,1) then '.' fi, 
+'%',
+fi,
+
+
+if p(v440) then
+  ,(,
+    'a440%',
+      replace(
+      replace(v440,'^p','.^p'),
+                   '^v',' ;^v'), 
+    '%',
+  ,),
+fi,
+
+
+if p(v500) then
+,(,
+ 'a500%',
+   v500, if right(v500,1)<>'.' then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v504) then
+,(,
+ 'a504%',
+   v504, if NOT '.?!-':right(v504,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v505) then
+,(,
+ 'a505%',
+   '  ^',
+   replace(replace(v505*3,'^t',' --^t'),'^r',' /^r'),
+   if NOT '.?!->':right(v505,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v506) then
+,(,
+ 'a506%',
+   v506, if NOT '.?!-':right(v506,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v520) then
+,(,
+ 'a520%',
+   v520, if NOT '.?!-':right(v520,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+
+if p(v521) then
+,(,
+ 'a521%',
+   v521, if NOT '.?!-':right(v521,1) then '.' fi, 
+ '%',
+,),
+fi,
+
+
+if p(v530) then
+,(,
+ 'a530%',
+   v530,
+   if NOT '.)-?!':right(v530,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v536) then
+,(,
+ 'a536%',
+   v536,
+ '%',
+,),
+fi,
+
+
+if p(v585) then
+,(,
+   'a585%',v585,'%',
+,),
+fi,
+
+
+
+if p(v590) then
+,(,
+   'a590%',v590,'%',
+,),
+fi,
+
+
+if p(v591) then
+,(,
+   'a591%',v591,'%',
+,),
+fi,
+
+
+
+if p(v600) then
+,(,
+  'a600%',
+    v600,
+    if NOT '.)-?!':right(v600,1) then '.' fi,
+  '%',
+,),
+fi,
+
+
+if p(v610) then
+,(,
+  'a610%',
+    v610,
+    if NOT '.)-?!':right(v610,1) then '.' fi,
+  '%',
+,),
+fi,
+
+
+
+if p(v650) then
+,(,
+  'a650%'
+    v650,
+    if NOT '.)-?!':right(v650,1) then '.' fi,
+  '%',
+,),
+fi,
+
+
+if p(v659) then
+  ,(,
+     'a659%',v659,'%',
+  ,),
+fi,
+
+
+
+if p(v700) then
+,(,
+ 'a700%',
+  replace(
+  replace(
+  replace(v700,'^c',',^c'),
+               '^d',',^d'),
+               '^e',',^e'),
+   if NOT '.)-?!':right(v700,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v710) then
+,(,
+ 'a710%',
+   replace(
+   replace(v710,'^b','.^b'),
+                '^e',',^e'),
+   if NOT '.)-?!':right(v710,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+if p(v711) then
+  (,
+    'a711%  ',
+    '^a',v711^a,
+    "^n("v711^n,
+    if p(v711^d) then
+      if p(v711^n) then ' :^d' else '^d(' fi,
+      v711^d,
+    fi,
+    if p(v711^c) then
+      if p(v711^n) OR p(v711^d) then ' :^c' else '^c(' fi,
+      v711^c,
+    fi,
+    if s(v711^n,v711^d,v711^c)>'' then ')',
+      else if right(v711,1)<>'.' then '.' fi,
+    fi,
+    '%',
+ ,),
+fi,
+
+
+
+if p(v800) then
+,(,
+ 'a800%',
+  replace(
+  replace(
+  replace(v800,'^c',',^c'),
+               '^d',',^d'),
+               '^e',',^e'),
+   if NOT '.)-?!':right(v800,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+
+if p(v810) then
+,(,
+ 'a810%',
+   replace(
+   replace(v810,'^b','.^b'),
+                '^e',',^e'),
+   if NOT '.)-?!':right(v810,1) then '.' fi,
+ '%',
+,),
+fi,
+
+
+
+if p(v856) then
+,(,
+   'a856%',v856,'%',
+,),
+fi,
+
+
+if p(v859) then
+,(,
+   'a859%',v859,'%',
+,),
+fi,
+
+if p(v901) then 'a901%',v901,'%', fi,
+
+,
+
+
+
+),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if p(v100) then
+  v100^a, " "v100^c,
+fi,
+if p(v110) then
+  replace(replace(v110*4,s('^9',v110^9),'.'),'^b',' '),
+fi,
+if p(v111) then
+  replace(replace(replace(replace(v111*4,'^n',' '),'^d',' '),'^c',' '),'^9',' '),
+fi,
+if p(v240) and a(v130) then
+   /,'  [', v240^a, ']',
+fi,
+if p(v130) then
+  '[', replace(v130*4,'^p',' '), ']',
+fi,
+
+
+/#,'    ', replace(replace(replace(v245*4,'^n',' '),'^b',' '),'^c',' '),
+
+
+
+
+if p(v250) then ' -- ', v250^a, fi,
+
+
+
+if p(v260) then ' -- ',
+  replace(replace(replace(replace(replace(replace(
+    v260*4,'^a',' '),'^b',' '),'^c',' '),'^e',' '),'^f',' '),'^g',' '),
+
+fi,
+
+
+
+if p(v300) then
+   if v999.1='m' then /,'    ' else ' -- ', fi,
+   replace(replace(v300*4,'^b',' '),'^e',' '),
+fi,
+
+#
+
+
+if p(v440) then ' --',
+  ,(,
+      ' (', v440^a,
+       if p(v440^p) then ' 'v440^p fi,
+       if p(v440^v) then ' 'v440^v fi, ')',
+  ,),
+fi,
+
+if v999.1='m' then /#, fi,
+
+#
+if v999.1='a' AND s(v500)>'' then ' --', fi,
+
+if p(v500) then ' ',
+  ,(,
+     
+     '   ',v500^a,
+#  ,),
+fi, 
+
+
+if p(v504) then ' ',
+  ,(,
+     
+     '   ',v504^a,
+  ,),
+
+#,
+
+fi, 
+
+
+
+if p(v020) AND v999.1='m' then /,'    ISBN ',v020^a/, fi,
+
+
+if s(v650,v600,v610)>'' then
+  proc(
+       if p(v650) then ('a5555%',v650^a,v650^9,'%'), fi,
+       if p(v600) then ('a5555%',v600^a,'%'), fi,
+       if p(v610) then ('a5555%',v610^a,'%'), fi,
+       if p(v659) then ('a5555%',v659^a,| - |v659^b,| - |v659^c,'%'), fi,
+      ),
+  ,(,
+     if iocc>nocc(v5555) then break, else '    ',f(iocc,1,0),'. ',v5555, fi,
+  ,),
+  proc('d5555'),
+fi,
+
+
+if s(v700,v710,v711) > '' then
+  proc(
+       if p(v700) then ('a5555%',v700^a," "v700^c,'%'), fi,
+       if p(v710) then ('a5555%',replace(replace(v710*4,'^b',' '), s('^9',v710^9),'.'),'%'), fi,
+       if p(v711) then ('a5555%',v711^a,'%'), fi,
+      ),
+  proc('a5556%I%a5556%II%a5556%III%a5556%IV%a5556%V%',
+       'a5556%VI%a5556%VII%a5556%VIII%a5556%IX%a5556%X%',
+       'a5556%XI%a5556%XII%a5556%XIII%a5556%XIV%a5556%XV%',
+       'a5556%XVI%a5556%XVII%a5556%XVIII%a5556%XIX%a5556%XX%',
+      ),
+  ,(,
+     if iocc>nocc(v5555) then break else
+       '  ',v5556,'. ',
+       if right(v5555,2)='.,' then mid(v5555,1,size(v5555)-1),
+         else if right(v5555,1)=',' then mid(v5555,1,size(v5555)-1),'.',
+         else v5555,
+       fi,fi,
+     fi,
+  ,),
+  proc('d5555','d5556'),
+fi,
+
+if p(v859) then /#, v859^b[1], fi,
+
+/#
+

@@ -1,0 +1,63 @@
+W:MARC  NOMBR MARTA MART  DESCR CABEC 
+F:ISIS  INVEN LISTA CEPAL MARTA ALERTAETIQ  TODO  EXPOS CII   
+F:CABECE
+S:MARC  
+***
+001 N£mero de Control                             1 100 0 1
+002 Encabezamiento de Marc                        2 100 0 1
+003 Identif. Num. Control                         3 100 0 1
+005 Fecha Ultima Modificaci¢n                     5 100 0 1
+006 Caracter¡sticas Material  abcdefghijkmn       6 100 0 1
+007 Descripci¢n Fisica        abcdefghijklmnopq   7 100 0 1
+008 Idioma                    abcdefghijklmnopqr  8 100 0 0
+018 Cabecera                                      18 100 0 0
+009                                               9 100 0 0
+020 ISBN                      abcz6               20 100 0 1
+022 ISSN                      ayz6                22 100 0 1
+040 Biblioteca                abcde6              40 100 0 1
+080 CDU                       a                   80 100 0 0
+100 Autor                     abcdefgklnpqtu469   100 100 0 0
+110 Entidad                   abcdefgklnptu469    110 100 0 1
+111 Reuni¢n                   acdefgklnpqu46      111 100 0 0
+130 T¡tulo unif.              ap                  130 100 0 0
+240 T¡tulo Unif.              adfghklmnoprs6      240 100 0 1
+245 T¡tulo                    abcfghknops6        245 100 0 0
+246 Variantes tit.            ab                  246 100 0 1
+250 Edici¢n                   ab6                 250 100 0 0
+255 Escala                    abcdefg6            255 100 0 1
+256 Archivos de Computadora   a6                  256 100 0 0
+260 Publicaci¢n               abcdefg6            260 100 0 0
+300 Descripci¢n               abcefg36            300 100 0 1
+310 Frecuencia                ab6                 310 100 0 0
+362 Inicio-cese               az6                 362 100 0 1
+440 Colecci¢n                 anopvx6             440 100 0 1
+500 Nota                      a356                500 100 0 1
+504 Bibliograf¡a                                  504 100 0 0
+505 Contenido                 trg                 505 200 0 1
+520 Resumen                   ab36                520 100 0 1
+521 Nivel                     ab36                521 100 0 1
+530 Otro soporte              abcd36              530 100 0 1
+536 Auspicio                  abcdefgh6           536 100 0 1
+585 Exposici¢n                a                   585 100 0 1
+600 Id-Persona                abcd9               600 100 0 1
+610 Id-Entidad                ab9                 610 100 0 1
+611 Id-Reunion                aendc               611 100 0 1
+650 Controlado                abcdevxyz236        650 100 0 1
+651 Geogr fico                a                   651 100 0 1
+653 Propuesto                 a6                  653 100 0 1
+659 Tema                      xyz                 659 100 0 1
+700 Autor                     abcdefghklmnopqrstu9700 100 0 1
+710 Entidad                   abcdefghklmnoprstux9710 100 0 1
+711 Reunion                   abcdefghklnpqstux456711 100 0 1
+740 Variantes                 a                   740 100 0 1
+773 En                        g                   773 100 0 1
+800 Director                  abcdefghklmnopqrstu9800 100 0 1
+810 Director                  abcdefghklmnopqrstu9810 100 0 1
+852                                               852 100 0 1
+856 Link                      abcdfghijklmnopqrstu856 100 0 1
+900 hijos                                         900 100 0 1
+859 Localizaci¢n y acceso     acdefghlmn          859 100 0 1
+901 Tipo de hoja de trabajo                       901 100 0 0
+869 Existencias                                   869 100 0 0
+960 Cajas                     i                   960 100 0 1
+Catalogador y Fecha           ef                  959 100 0 1

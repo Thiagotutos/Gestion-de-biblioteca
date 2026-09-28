@@ -1,0 +1,142 @@
+'d*',
+
+('a859|  ',|^a|v2,|^m|v3[1]^*,|^n|v3[1]^l,|^iBaja: |v92,|^i|v99,'^ddomicilio|'/),
+
+
+if p(v15) then
+
+
+ if p(v9) then 
+  'a110|10^a',v15,'|',
+ else
+  'a100|10^a',v15,'|',
+ fi,
+fi,
+/
+if p(v16) then ('a700|10^a',v16^*,|^e|v16^f,'|'/) fi,
+if p(v17) then ('a710|10^a',v17^*,'|'/) fi,
+
+
+
+
+
+mhl,
+'a245|10^a',replace(replace(replace(s(mhl,v18),' : ',': '),': ',' : '),' : ','^b'),
+
+
+
+
+if p(V16) or p(v118) or p(v17) THEN 
+  S('^c',v15^*,", "v15^f,
+  if p(v16) or p(v17) then  " ; "d15 fi,
+  (| ; |+v16^*,|, |v16^f, if v16^y>'' then ' ... y otros' fi),,,, 
+  if p(v16) then 
+    " ; "d17,
+  fi, 
+  (| ; |+v17^*,|, |v17^f))
+fi, 
+
+if a(v168) and p(v118) then 
+  S(".  "d118,v118^*,| [|v4|]|), 
+  if p(v118^r) then 
+    S("^c"v118^r)
+  else  
+    S(if p(V115)  THEN  "^c"v115^*,", "v115^f," ; "d116   
+         else "^c"d116  (|; |+v116^*,|, |v116^f, if v16^y>'' then ' ... y otros' fi)
+    fi)
+  fi,
+fi
+
+
+
+'|' ,
+
+
+mpl,
+/
+
+if p(v20) then 'a300|0 ^a',replace(replace(v20,' : ',': '),': ','^b'),'|', / fi,
+
+if p(v25) then 'a440| 0^a',replace(replace( s(v25^*,|^v|v25^n,|^p|v25^s,|^v|v25^u, '|'),'<',''),'>','')/   fi, 
+
+if s(v38,v39,v43)>'' then  'a260|  ',(|^a|v39),(|^b|v38),(|^c|v43) ,'|'    fi,
+
+
+if p(v41) then 'a250|  ^a',v41,'|' fi,
+
+if p(v47) then 'a20|  ^a',v47,'|' fi,
+
+if p(v64) then 'a8|  ^a',v64,'|' fi,
+
+if p(v68) then
+  ( 'a500|  ^a',v68,'|' /)
+fi,
+
+
+if p(v76) then
+ ('a653|  ^a',v76,'|'/)
+fi,
+
+
+if p(v80) then
+ ('a650|  ^a',v80,'|'/)
+fi,
+
+
+ 'a959|  ^eImportacion de Bibes',"^f"v97,'|',
+
+
+if p(v29) and v6='s' then
+  ('a710|10^a',v29,'|'/)
+fi,
+
+if p(v30) and v6='s' then
+  ('a245|10^a',v30,'|'/)
+fi,
+
+
+if v6='as' then
+  ('a773|  ^t',if p(v66) then ref(val(v66),v30) else v130 fi,'^g',v31,v20, '|'/)
+   'a902@7@',
+   |a901@|v66|@|,
+fi,
+
+if v6='am' then
+  ('a773|  ^t',ref(val(v66),v18,' / ',v15,if a(v15) then v16[1] fi,'^d',v39,|: |v38,|, |v43),if p(v130) then v130 else ' ' fi,|^g|v20, '|'/)
+   'a902@7@',
+   |a901@|v66|@|,
+fi,
+
+if v6='s' then 'a902@4@' fi,
+if v6='m' then 'a902@1@' fi,
+
+
+
+if p(v4) then
+  'a309|  ^a'v4,'|',
+fi,
+
+
+
+if p(v33) and v6='as' then
+  ('a310|  ^a',v33, '|'/)
+fi,
+
+
+
+if p(v35) and v6='s' then
+  ('a22|  ^a',v35,'|'/)
+fi,
+
+
+
+if p(v34) and v6='s' then
+  ('a866|  ^a',v34,'|'/)
+fi,
+
+
+
+if p(v118) then
+  ('a505|  ^t',mhl, v118,mpl,|^r|v115,|^r|v116, '|'/)    
+fi,
+
