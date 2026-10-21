@@ -32,7 +32,7 @@ Este repositorio incluye un esquema de base de datos preparado (`database.sql`) 
    ```
 ---
 
-<img src="<img width="719" height="774" alt="Diagrama de Biblioteca" src="https://github.com/user-attachments/assets/40101793-3129-47c9-83df-aa1615699cb2" />" alt="Descripción de la imagen">
+<img width="719" height="774" alt="Diagrama de Biblioteca" src="https://github.com/user-attachments/assets/b694f72c-9013-4b6a-8126-81c80ef0b84f" />
 
 ---
 
