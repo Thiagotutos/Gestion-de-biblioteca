@@ -1,0 +1,11 @@
+# Archivos privados / backups de la escuela (datos reales)
+20260512/
+bibliotecla/
+copia de seguridad/
+scripts_migracion/
+
+# Archivos de datos o descargas temporales
+sheet_data.csv
+*.iso
+*.mst
+*.xrf
