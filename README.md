@@ -30,6 +30,9 @@ Este repositorio incluye un esquema de base de datos preparado (`database.sql`) 
    ```
    http://localhost/Gestion-de-biblioteca-main/
    ```
+---
+
+<img src="<img width="719" height="774" alt="Diagrama de Biblioteca" src="https://github.com/user-attachments/assets/40101793-3129-47c9-83df-aa1615699cb2" />" alt="Descripción de la imagen">
 
 ---
 
