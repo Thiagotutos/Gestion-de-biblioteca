@@ -122,7 +122,7 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
 2. En la sección **"Registrar Préstamo"**:
    - **Libro Disponible**: Busca por título, autor o número de inventario. Solo se listan libros con estado `Disponible`.
    - **Alumno/a (Lector)**: Nombre y apellido del estudiante o solicitante.
-   - **Turno**: Selecciona entre `Mañana`, `Tarde` o `Noche`.
+   - **Turno**: Selecciona entre `Mañana`, `Tarde`.
    - **Curso**: Ingresa el curso del alumno (ej. *3ro A*, *1º 2da*).
    - **Documento / DNI (opcional)**: Documento numérico del solicitante.
 3. Presiona **"Registrar Préstamo"**. El sistema cambiará el estado del libro a `Prestado` y persistirá la transacción con auditoría completa.
