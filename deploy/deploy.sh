@@ -96,7 +96,11 @@ APP_SOURCE="$(dirname "$SCRIPT_DIR")"
 cp -r ${APP_SOURCE}/*.php ${APP_DIR}/ 2>/dev/null || true
 cp -r ${APP_SOURCE}/style.css ${APP_DIR}/ 2>/dev/null || true
 cp -r ${APP_SOURCE}/includes ${APP_DIR}/ 2>/dev/null || true
+cp -r ${APP_SOURCE}/pages ${APP_DIR}/ 2>/dev/null || true
+cp -r ${APP_SOURCE}/api ${APP_DIR}/ 2>/dev/null || true
+cp -r ${APP_SOURCE}/database ${APP_DIR}/ 2>/dev/null || true
 cp -r ${APP_SOURCE}/uploads ${APP_DIR}/ 2>/dev/null || true
+cp -r ${APP_SOURCE}/database/database.sql ${APP_DIR}/database.sql 2>/dev/null || true
 cp -r ${APP_SOURCE}/database.sql ${APP_DIR}/ 2>/dev/null || true
 
 # Ajustar config.php con las credenciales del servidor

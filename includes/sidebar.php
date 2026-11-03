@@ -2,7 +2,11 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
         <!-- Barra Lateral (Sidebar) -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebarMenu">
+            <div class="sidebar-header-mobile">
+                <span>Navegación</span>
+                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Cerrar menú">&times;</button>
+            </div>
             <ul>
                 <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">Dashboard</a></li>
                 <li>
@@ -12,13 +16,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <li><a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">Categorías</a></li>
                         <li><a href="authors.php" class="<?php echo ($current_page == 'authors.php') ? 'active' : ''; ?>">Autores</a></li>
                         <li><a href="publishers.php" class="<?php echo ($current_page == 'publishers.php') ? 'active' : ''; ?>">Editoriales</a></li>
-
                     </ul>
                 </li>
-                <?php if ($_SESSION['user_role'] === 'Administrador'): ?>
+                <?php if (in_array($_SESSION['user_role'] ?? '', ['Administrador', 'Bibliotecario'])): ?>
                 <li><a href="issue_books.php" class="<?php echo ($current_page == 'issue_books.php') ? 'active' : ''; ?>">Préstamos</a></li>
                 <?php endif; ?>
-                <?php if ($_SESSION['user_role'] === 'Administrador'): ?>
+                <?php if (($_SESSION['user_role'] ?? '') === 'Administrador'): ?>
                 <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>">Usuarios</a></li>
                 <li><a href="db_tools.php" class="<?php echo ($current_page == 'db_tools.php') ? 'active' : ''; ?>">Respaldo BD</a></li>
                 <?php endif; ?>

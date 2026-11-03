@@ -60,6 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
 
     try {
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
+        // Permitir fechas parciales (ej: '1967' en columna DATE → '1967-00-00')
+        // y valores fuera de rango sin error fatal
+        $pdo->exec("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO,ALLOW_INVALID_DATES';");
 
         // Parser seguro de sentencias SQL respetando comillas y comentarios
         $queries = [];
@@ -112,9 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
             $executed++;
         }
 
+        $pdo->exec("SET SESSION sql_mode = '';");
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
         $_SESSION['success_msg'] = "Base de datos restaurada correctamente. Se ejecutaron " . number_format($executed) . " sentencias SQL con éxito.";
     } catch (Exception $e) {
+        $pdo->exec("SET SESSION sql_mode = '';");
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
         $_SESSION['error_msg'] = "Error durante la restauración: " . $e->getMessage();
     }
@@ -161,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 25px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
     
     <!-- TARJETA 1: EXPORTAR BASE DE DATOS -->
     <div class="form-container" style="max-width: 100%;">

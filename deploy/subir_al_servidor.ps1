@@ -69,6 +69,18 @@ scp -P $SERVIDOR_PORT "$PROYECTO_LOCAL\database.sql" "$SERVIDOR_USER@$SERVIDOR_I
 Write-Host "   → includes/" -ForegroundColor DarkGray
 scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\includes" "$SERVIDOR_USER@$SERVIDOR_IP`:/tmp/biblioteca-deploy/"
 
+# Subir directorio pages
+Write-Host "   → pages/" -ForegroundColor DarkGray
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\pages" "$SERVIDOR_USER@$SERVIDOR_IP`:/tmp/biblioteca-deploy/"
+
+# Subir directorio api
+Write-Host "   → api/" -ForegroundColor DarkGray
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\api" "$SERVIDOR_USER@$SERVIDOR_IP`:/tmp/biblioteca-deploy/"
+
+# Subir directorio database
+Write-Host "   → database/" -ForegroundColor DarkGray
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\database" "$SERVIDOR_USER@$SERVIDOR_IP`:/tmp/biblioteca-deploy/"
+
 # Subir directorio uploads
 Write-Host "   → uploads/" -ForegroundColor DarkGray
 scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\uploads" "$SERVIDOR_USER@$SERVIDOR_IP`:/tmp/biblioteca-deploy/"

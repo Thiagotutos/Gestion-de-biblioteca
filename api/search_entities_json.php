@@ -18,6 +18,40 @@ if (!isset($_SESSION['user_id'])) {
 $type = isset($_GET['type']) ? trim($_GET['type']) : '';
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
+header('Content-Type: application/json; charset=utf-8');
+
+// Verificación de disponibilidad de número de inventario
+if ($type === 'check_isbn') {
+    $isbn = isset($_GET['isbn']) ? trim($_GET['isbn']) : '';
+    if ($isbn === '') {
+        echo json_encode(['exists' => false]);
+        exit;
+    }
+    $stmt = $pdo->prepare("SELECT id, titulo, isbn FROM books WHERE isbn = ? LIMIT 1");
+    $stmt->execute([$isbn]);
+    $book = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($book) {
+        echo json_encode(['exists' => true, 'book' => $book]);
+    } else {
+        echo json_encode(['exists' => false]);
+    }
+    exit;
+}
+
+// Obtener último número de inventario y siguiente sugerido
+if ($type === 'get_next_isbn') {
+    $stmt_max = $pdo->query("SELECT isbn FROM books WHERE isbn REGEXP '^[0-9]+$' ORDER BY CAST(isbn AS UNSIGNED) DESC LIMIT 1");
+    $last_isbn = $stmt_max->fetchColumn();
+    $next_isbn = '000001';
+    if ($last_isbn !== false && $last_isbn !== null && $last_isbn !== '') {
+        $digits = strlen($last_isbn);
+        $next_val = (int)$last_isbn + 1;
+        $next_isbn = str_pad((string)$next_val, max(6, $digits), '0', STR_PAD_LEFT);
+    }
+    echo json_encode(['last_isbn' => $last_isbn, 'next_isbn' => $next_isbn]);
+    exit;
+}
+
 // Validar tipo de entidad permitido
 $allowed_tables = [
     'authors' => 'authors',
@@ -32,8 +66,6 @@ if (!isset($allowed_tables[$type])) {
 }
 
 $table = $allowed_tables[$type];
-
-header('Content-Type: application/json; charset=utf-8');
 
 if (mb_strlen($q) < 1) {
     // Si no hay término, devolver los primeros 20 ordenados alfabéticamente

@@ -46,7 +46,7 @@ $cant_extraviados = $stmt_extraviados->fetchColumn();
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <!-- Banners Informativos -->
-<div class="alert <?php echo $clase_alerta_horario; ?>" style="display: flex; justify-content: space-between; align-items: center;">
+<div class="alert <?php echo $clase_alerta_horario; ?>" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
     <div>
         <strong>Estado de la Biblioteca:</strong> Actualmente nos encontramos <strong><?php echo $estado_biblioteca; ?></strong>
     </div>
@@ -102,7 +102,7 @@ $cant_extraviados = $stmt_extraviados->fetchColumn();
     <div style="display: flex; justify-content: center; gap: 20px;">
         <a href="books.php" class="btn btn-primary" style="padding: 15px 30px; font-size: 1.1rem;">Ver Inventario de Libros</a>
         <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
-        <a href="add_book.php" class="btn btn-edit" style="padding: 15px 30px; font-size: 1.1rem; background-color: var(--color-success);">Registrar Nuevo Libro</a>
+        <a href="add_book.php" class="btn btn-success" style="padding: 15px 30px; font-size: 1.1rem; background-color: var(--color-success);">Registrar Nuevo Libro</a>
         <?php endif; ?>
     </div>
 </div>

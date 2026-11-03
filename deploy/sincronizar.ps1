@@ -44,6 +44,18 @@ scp -P $SERVIDOR_PORT "$PROYECTO_LOCAL\style.css" "$SERVIDOR_USER@$SERVIDOR_IP`:
 Write-Host "📤 Subiendo includes/..." -ForegroundColor Green
 scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\includes" "$SERVIDOR_USER@$SERVIDOR_IP`:$APP_DIR/"
 
+# Subir pages
+Write-Host "📤 Subiendo pages/..." -ForegroundColor Green
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\pages" "$SERVIDOR_USER@$SERVIDOR_IP`:$APP_DIR/"
+
+# Subir api
+Write-Host "📤 Subiendo api/..." -ForegroundColor Green
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\api" "$SERVIDOR_USER@$SERVIDOR_IP`:$APP_DIR/"
+
+# Subir database
+Write-Host "📤 Subiendo database/..." -ForegroundColor Green
+scp -P $SERVIDOR_PORT -r "$PROYECTO_LOCAL\database" "$SERVIDOR_USER@$SERVIDOR_IP`:$APP_DIR/"
+
 # Restaurar config.php del servidor (para no sobreescribir las credenciales de producción)
 Write-Host "🔒 Restaurando config.php de producción..." -ForegroundColor Yellow
 ssh -p $SERVIDOR_PORT "$SERVIDOR_USER@$SERVIDOR_IP" "cd $APP_DIR && chown -R www-data:www-data . && chmod -R 755 . && chmod -R 775 uploads/"

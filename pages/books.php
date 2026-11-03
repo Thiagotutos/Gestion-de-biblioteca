@@ -14,15 +14,40 @@ $offset = ($page - 1) * $per_page;
 
 // Búsqueda
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search_by = isset($_GET['search_by']) ? trim($_GET['search_by']) : 'all';
 $filter_estado = isset($_GET['filter']) ? trim($_GET['filter']) : '';
 
 $where_clauses = [];
 $params = [];
 
 if ($search !== '') {
-    $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
     $search_param = "%$search%";
-    $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+    switch ($search_by) {
+        case 'title':
+            $where_clauses[] = "b.titulo LIKE ?";
+            $params[] = $search_param;
+            break;
+        case 'author':
+            $where_clauses[] = "a.name LIKE ?";
+            $params[] = $search_param;
+            break;
+        case 'isbn':
+            $where_clauses[] = "b.isbn LIKE ?";
+            $params[] = $search_param;
+            break;
+        case 'category':
+            $where_clauses[] = "c.name LIKE ?";
+            $params[] = $search_param;
+            break;
+        case 'publisher':
+            $where_clauses[] = "p.name LIKE ?";
+            $params[] = $search_param;
+            break;
+        default: // 'all'
+            $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
+            $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+            break;
+    }
 }
 
 if ($filter_estado === 'missing') {
@@ -65,6 +90,7 @@ $libros = $stmt->fetchAll();
 // Build URL params for pagination links
 $url_params = [];
 if ($search !== '') $url_params['search'] = $search;
+if ($search_by !== 'all') $url_params['search_by'] = $search_by;
 if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 ?>
 
@@ -72,10 +98,10 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 
 <div class="content-header">
     <h2>Gestionar Libros</h2>
-    <div style="display: flex; gap: 10px; align-items: center;">
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> libros encontrados</span>
         <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
-        <a href="add_book.php" class="btn btn-primary">Agregar Libro</a>
+        <a href="add_book.php" class="btn btn-primary">+ Agregar Libro</a>
         <?php endif; ?>
     </div>
 </div>
@@ -92,6 +118,14 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 <!-- Buscador y Filtros -->
 <div class="search-filters-bar">
     <form method="GET" class="search-form" id="searchForm">
+        <select name="search_by" id="searchBySelect" class="filter-select" title="Criterio de búsqueda">
+            <option value="all" <?php echo $search_by === 'all' ? 'selected' : ''; ?>>🔍 Todos los campos</option>
+            <option value="title" <?php echo $search_by === 'title' ? 'selected' : ''; ?>>📖 Título</option>
+            <option value="author" <?php echo $search_by === 'author' ? 'selected' : ''; ?>>✍️ Autor</option>
+            <option value="isbn" <?php echo $search_by === 'isbn' ? 'selected' : ''; ?>>🏷️ Nº Inventario</option>
+            <option value="category" <?php echo $search_by === 'category' ? 'selected' : ''; ?>>📂 Categoría</option>
+            <option value="publisher" <?php echo $search_by === 'publisher' ? 'selected' : ''; ?>>🏢 Editorial</option>
+        </select>
         <div class="search-input-wrapper">
             <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -99,14 +133,14 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar por título, autor, inventario, categoría o editorial..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
             <span id="searchSpinner" class="search-spinner" style="display:none;"></span>
         </div>
-        <select name="filter" id="filterSelect" class="filter-select">
+        <select name="filter" id="filterSelect" class="filter-select" title="Filtrar por estado">
             <option value="">Todos los estados</option>
             <option value="disponible" <?php echo $filter_estado === 'disponible' ? 'selected' : ''; ?>>Disponible</option>
             <option value="prestado" <?php echo $filter_estado === 'prestado' ? 'selected' : ''; ?>>Prestado</option>
             <option value="missing" <?php echo $filter_estado === 'missing' ? 'selected' : ''; ?>>Extraviado</option>
         </select>
         <button type="submit" class="btn btn-primary">Buscar</button>
-        <?php if ($search !== '' || $filter_estado !== ''): ?>
+        <?php if ($search !== '' || $filter_estado !== '' || $search_by !== 'all'): ?>
         <a href="books.php" class="btn" style="background: #999;">Limpiar</a>
         <?php endif; ?>
     </form>
@@ -114,6 +148,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 
 <!-- Contenedor de resultados (se actualiza con AJAX) -->
 <div id="searchResults">
+<div class="table-responsive">
 <table class="data-table">
     <thead>
         <tr>
@@ -153,6 +188,9 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
                         <?php if (!empty($libro['notas'])): ?>
                             <div style="font-size: 0.75rem; color: #888; font-style: italic;" title="<?php echo htmlspecialchars($libro['notas']); ?>">📝 <?php echo htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')); ?></div>
                         <?php endif; ?>
+                        <?php if (!empty($libro['observacion'])): ?>
+                            <div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="<?php echo htmlspecialchars($libro['observacion']); ?>">🏷️ <?php echo htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')); ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </td>
@@ -191,6 +229,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         <?php endif; ?>
     </tbody>
 </table>
+</div>
 
 <!-- Paginación -->
 <?php if ($total_pages > 1): ?>
@@ -243,18 +282,36 @@ function closeImageModal() {
     modal.style.display = 'none';
 }
 
-// === BÚSQUEDA EN VIVO ===
+// === BÚSQUEDA EN VIVO Y POR CAMPO ===
 (function() {
     var searchInput = document.getElementById('liveSearchInput');
+    var searchBySelect = document.getElementById('searchBySelect');
     var filterSelect = document.getElementById('filterSelect');
     var resultsContainer = document.getElementById('searchResults');
     var resultCount = document.getElementById('result-count');
     var spinner = document.getElementById('searchSpinner');
     var debounceTimer = null;
     var currentXHR = null;
+
+    var placeholders = {
+        'all': 'Buscar por título, autor, inventario, categoría o editorial...',
+        'title': 'Escribe el título del libro...',
+        'author': 'Escribe el nombre del autor...',
+        'isbn': 'Escribe el número de inventario...',
+        'category': 'Escribe el nombre de la categoría...',
+        'publisher': 'Escribe el nombre de la editorial...'
+    };
+
+    function updatePlaceholder() {
+        if (searchBySelect && searchInput) {
+            var selectedBy = searchBySelect.value;
+            searchInput.placeholder = placeholders[selectedBy] || placeholders['all'];
+        }
+    }
     
     function doLiveSearch(resetPage) {
         var query = searchInput.value;
+        var searchBy = searchBySelect ? searchBySelect.value : 'all';
         var filter = filterSelect.value;
         var page = resetPage ? 1 : 1;
         
@@ -266,14 +323,17 @@ function closeImageModal() {
             currentXHR.abort();
         }
         
-        // Crear petición AJAX (compatible con IE6+/XP)
+        // Crear petición AJAX (compatible con navegadores antiguos / CRT)
         if (window.XMLHttpRequest) {
             currentXHR = new XMLHttpRequest();
         } else {
             currentXHR = new ActiveXObject("Microsoft.XMLHTTP");
         }
         
-        var url = '../api/search_ajax.php?type=books&q=' + encodeURIComponent(query) + '&filter=' + encodeURIComponent(filter) + '&page=' + page;
+        var url = '../api/search_ajax.php?type=books&q=' + encodeURIComponent(query) + 
+                  '&search_by=' + encodeURIComponent(searchBy) + 
+                  '&filter=' + encodeURIComponent(filter) + 
+                  '&page=' + page;
         
         currentXHR.onreadystatechange = function() {
             if (currentXHR.readyState === 4) {
@@ -311,6 +371,7 @@ function closeImageModal() {
     
     function loadPage(pageNum) {
         var query = searchInput.value;
+        var searchBy = searchBySelect ? searchBySelect.value : 'all';
         var filter = filterSelect.value;
         
         spinner.style.display = 'inline-block';
@@ -325,7 +386,10 @@ function closeImageModal() {
             currentXHR = new ActiveXObject("Microsoft.XMLHTTP");
         }
         
-        var url = '../api/search_ajax.php?type=books&q=' + encodeURIComponent(query) + '&filter=' + encodeURIComponent(filter) + '&page=' + pageNum;
+        var url = '../api/search_ajax.php?type=books&q=' + encodeURIComponent(query) + 
+                  '&search_by=' + encodeURIComponent(searchBy) + 
+                  '&filter=' + encodeURIComponent(filter) + 
+                  '&page=' + pageNum;
         
         currentXHR.onreadystatechange = function() {
             if (currentXHR.readyState === 4) {
@@ -345,7 +409,7 @@ function closeImageModal() {
         currentXHR.send();
     }
     
-    // Escuchar cambios en el input con debounce de 500ms
+    // Escuchar cambios en el input con debounce de 400ms
     if (searchInput) {
         searchInput.onkeyup = function() {
             if (debounceTimer) {
@@ -353,16 +417,26 @@ function closeImageModal() {
             }
             debounceTimer = setTimeout(function() {
                 doLiveSearch(true);
-            }, 500);
+            }, 400);
+        };
+    }
+
+    // Escuchar cambios en el selector de campo de búsqueda
+    if (searchBySelect) {
+        searchBySelect.onchange = function() {
+            updatePlaceholder();
+            doLiveSearch(true);
         };
     }
     
-    // Escuchar cambios en el filtro
+    // Escuchar cambios en el filtro de estado
     if (filterSelect) {
         filterSelect.onchange = function() {
             doLiveSearch(true);
         };
     }
+
+    updatePlaceholder();
 })();
 </script>
 

@@ -12,20 +12,38 @@ if ($_SESSION['user_role'] === 'Lector') {
     exit;
 }
 
-$id = $_GET['id'] ?? null;
+$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 if ($id) {
-    // Eliminar imagen asociada si existe
-    $stmt = $pdo->prepare("SELECT imagen FROM books WHERE id = ?");
-    $stmt->execute([$id]);
-    $book = $stmt->fetch();
-    if ($book && $book['imagen']) {
-        $imgPath = __DIR__ . '/../uploads/books/' . $book['imagen'];
-        if (file_exists($imgPath)) unlink($imgPath);
-    }
+    try {
+        $stmt = $pdo->prepare("SELECT titulo, imagen, estado FROM books WHERE id = ?");
+        $stmt->execute([$id]);
+        $book = $stmt->fetch();
 
-    $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
-    $stmt->execute([$id]);
-    $_SESSION['success_msg'] = "Libro eliminado exitosamente.";
+        if ($book) {
+            // Regla de negocio: No permitir eliminar libros en préstamo activo
+            if ($book['estado'] === 'Prestado') {
+                $_SESSION['error_msg'] = "No puedes eliminar el libro '{$book['titulo']}' porque actualmente está prestado a un alumno. Primero registra su devolución.";
+            } else {
+                // Eliminar imagen del disco solo si ningún otro libro la está utilizando (ej: copias/donaciones compartidas)
+                if (!empty($book['imagen'])) {
+                    $stmt_img = $pdo->prepare("SELECT COUNT(*) FROM books WHERE imagen = ? AND id != ?");
+                    $stmt_img->execute([$book['imagen'], $id]);
+                    if ($stmt_img->fetchColumn() == 0) {
+                        $imgPath = __DIR__ . '/../uploads/books/' . $book['imagen'];
+                        if (file_exists($imgPath)) {
+                            unlink($imgPath);
+                        }
+                    }
+                }
+
+                $stmt_del = $pdo->prepare("DELETE FROM books WHERE id = ?");
+                $stmt_del->execute([$id]);
+                $_SESSION['success_msg'] = "Libro '{$book['titulo']}' eliminado exitosamente.";
+            }
+        }
+    } catch (Exception $e) {
+        $_SESSION['error_msg'] = "Error al eliminar el libro: " . $e->getMessage();
+    }
 }
 
 if (isset($_SERVER['HTTP_REFERER'])) {
@@ -34,4 +52,3 @@ if (isset($_SERVER['HTTP_REFERER'])) {
     header('Location: books.php');
 }
 exit;
-?>

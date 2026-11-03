@@ -18,6 +18,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $type = isset($_GET['type']) ? $_GET['type'] : '';
 $search = isset($_GET['q']) ? trim($_GET['q']) : '';
+$search_by = isset($_GET['search_by']) ? trim($_GET['search_by']) : 'all';
 $filter = isset($_GET['filter']) ? trim($_GET['filter']) : '';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = ($type === 'books') ? 25 : 20;
@@ -28,7 +29,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 switch ($type) {
     case 'books':
-        search_books($pdo, $search, $filter, $per_page, $offset, $page, $user_role);
+        search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $page, $user_role);
         break;
     case 'authors':
         search_simple($pdo, 'authors', $search, $per_page, $offset, $page, $user_role);
@@ -46,14 +47,38 @@ switch ($type) {
         echo 'Tipo no válido';
 }
 
-function search_books($pdo, $search, $filter, $per_page, $offset, $page, $user_role) {
+function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $page, $user_role) {
     $where_clauses = [];
     $params = [];
     
     if ($search !== '') {
-        $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
         $search_param = "%$search%";
-        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+        switch ($search_by) {
+            case 'title':
+                $where_clauses[] = "b.titulo LIKE ?";
+                $params[] = $search_param;
+                break;
+            case 'author':
+                $where_clauses[] = "a.name LIKE ?";
+                $params[] = $search_param;
+                break;
+            case 'isbn':
+                $where_clauses[] = "b.isbn LIKE ?";
+                $params[] = $search_param;
+                break;
+            case 'category':
+                $where_clauses[] = "c.name LIKE ?";
+                $params[] = $search_param;
+                break;
+            case 'publisher':
+                $where_clauses[] = "p.name LIKE ?";
+                $params[] = $search_param;
+                break;
+            default: // 'all'
+                $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
+                $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+                break;
+        }
     }
     
     if ($filter === 'missing') {
@@ -95,6 +120,7 @@ function search_books($pdo, $search, $filter, $per_page, $offset, $page, $user_r
     
     // Generar HTML
     echo '<div id="ajax-count" data-total="' . $total . '">' . number_format($total) . ' libros encontrados</div>';
+    echo '<div class="table-responsive">';
     echo '<table class="data-table"><thead><tr>';
     echo '<th>ID</th><th>Libro</th><th>Nº Inventario</th><th>Autor</th><th>Categoría</th><th>Editorial</th><th>Estado</th>';
     if ($user_role !== 'Lector') echo '<th>Acción</th>';
@@ -115,6 +141,9 @@ function search_books($pdo, $search, $filter, $per_page, $offset, $page, $user_r
         }
         if (!empty($libro['notas'])) {
             echo '<div style="font-size: 0.75rem; color: #888; font-style: italic;" title="' . htmlspecialchars($libro['notas']) . '">📝 ' . htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')) . '</div>';
+        }
+        if (!empty($libro['observacion'])) {
+            echo '<div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="' . htmlspecialchars($libro['observacion']) . '">🏷️ ' . htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')) . '</div>';
         }
         echo '</div></div></td>';
         echo '<td>' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '</td>';
@@ -145,12 +174,13 @@ function search_books($pdo, $search, $filter, $per_page, $offset, $page, $user_r
         echo '<tr><td colspan="' . $cols . '" style="text-align: center; padding: 30px;">No se encontraron libros.</td></tr>';
     }
     
-    echo '</tbody></table>';
+    echo '</tbody></table></div>';
     
     // Paginación
     if ($total_pages > 1) {
         $url_params = [];
         if ($search !== '') $url_params['search'] = $search;
+        if ($search_by !== 'all') $url_params['search_by'] = $search_by;
         if ($filter !== '') $url_params['filter'] = $filter;
         
         echo '<div class="pagination">';
@@ -228,6 +258,7 @@ function search_simple($pdo, $table, $search, $per_page, $offset, $page, $user_r
     $fk = isset($book_fk[$table]) ? $book_fk[$table] : '';
     
     echo '<div id="ajax-count" data-total="' . $total . '">' . number_format($total) . ' ' . $friendly_name . '</div>';
+    echo '<div class="table-responsive">';
     echo '<table class="data-table"><thead><tr>';
     echo '<th>ID</th><th>Nombre</th><th>Libros</th><th>Acción</th>';
     echo '</tr></thead><tbody>';
@@ -246,7 +277,10 @@ function search_simple($pdo, $table, $search, $per_page, $offset, $page, $user_r
         echo '<td><span class="status-badge status-available">' . $count . '</span></td>';
         
         if ($user_role !== 'Lector') {
-            echo '<td><a href="' . $table . '.php?delete=' . $item['id'] . '" class="btn btn-delete" onclick="return confirm(\'' . $delete_info[1] . '\');">' . $delete_info[0] . '</a></td>';
+            echo '<td>';
+            echo '<a href="' . $table . '.php?edit=' . $item['id'] . '" class="btn btn-edit" style="margin-right: 5px;">Editar</a>';
+            echo '<a href="' . $table . '.php?delete=' . $item['id'] . '" class="btn btn-delete" onclick="return confirm(\'' . $delete_info[1] . '\');">' . $delete_info[0] . '</a>';
+            echo '</td>';
         } else {
             echo '<td>-</td>';
         }
@@ -257,7 +291,7 @@ function search_simple($pdo, $table, $search, $per_page, $offset, $page, $user_r
         echo '<tr><td colspan="4" style="text-align: center;">No hay ' . $friendly_name . '.</td></tr>';
     }
     
-    echo '</tbody></table>';
+    echo '</tbody></table></div>';
     
     // Paginación
     if ($total_pages > 1) {

@@ -9,14 +9,46 @@ if (!isset($_SESSION['user_id'])) {
 
 // Lógica para agregar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
+    if ($_SESSION['user_role'] === 'Lector') { header('Location: authors.php'); exit; }
     $name = trim($_POST['name']);
     if ($name) {
         $stmt = $pdo->prepare("INSERT INTO authors (name) VALUES (?)");
-        try { $stmt->execute([$name]); $_SESSION['success_msg'] = "Autor agregado."; } 
-        catch (Exception $e) { $error = "El autor ya existe."; }
+        try { 
+            $stmt->execute([$name]); 
+            $_SESSION['success_msg'] = "Autor agregado."; 
+        } catch (Exception $e) { 
+            $_SESSION['error_msg'] = "El autor ya existe."; 
+        }
         header('Location: authors.php');
         exit;
     }
+}
+
+// Lógica para editar
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_item'])) {
+    if ($_SESSION['user_role'] === 'Lector') { header('Location: authors.php'); exit; }
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $name = trim($_POST['name'] ?? '');
+    if ($name && $id) {
+        $stmt = $pdo->prepare("UPDATE authors SET name = ? WHERE id = ?");
+        try {
+            $stmt->execute([$name, $id]);
+            $_SESSION['success_msg'] = "Autor actualizado exitosamente.";
+        } catch (Exception $e) {
+            $_SESSION['error_msg'] = "Error al actualizar o el autor ya existe.";
+        }
+        header('Location: authors.php');
+        exit;
+    }
+}
+
+// Obtener datos si se solicita editar
+$edit_item = null;
+if (isset($_GET['edit']) && $_SESSION['user_role'] !== 'Lector') {
+    $edit_id = (int)$_GET['edit'];
+    $stmt_edit = $pdo->prepare("SELECT * FROM authors WHERE id = ?");
+    $stmt_edit->execute([$edit_id]);
+    $edit_item = $stmt_edit->fetch();
 }
 
 // Lógica para borrar
@@ -70,27 +102,46 @@ if ($search !== '') $url_params['search'] = $search;
 <?php if (isset($_SESSION['success_msg'])): ?>
     <div class="alert alert-success"><?php echo htmlspecialchars($_SESSION['success_msg']); unset($_SESSION['success_msg']); ?></div>
 <?php endif; ?>
+<?php if (isset($_SESSION['error_msg'])): ?>
+    <div class="alert alert-warning"><?php echo htmlspecialchars($_SESSION['error_msg']); unset($_SESSION['error_msg']); ?></div>
+<?php endif; ?>
 <?php if (isset($error)): ?>
     <div class="alert alert-warning"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
 
-<div style="display: flex; gap: 20px;">
+<div class="split-layout">
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
-    <!-- Formulario para agregar -->
-    <div class="form-container" style="flex: 1; height: max-content;">
-        <h3>Agregar Autor</h3><br>
-        <form method="POST">
-            <div class="form-group">
-                <label>Nombre del Autor</label>
-                <input type="text" name="name" class="form-control" required>
-            </div>
-            <button type="submit" name="add_item" class="btn btn-primary">Guardar</button>
-        </form>
+    <!-- Formulario para agregar / editar -->
+    <div class="form-container form-pane">
+        <?php if ($edit_item): ?>
+            <h3>Editar Autor</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Modificando ID #<?php echo $edit_item['id']; ?></p>
+            <form method="POST">
+                <input type="hidden" name="id" value="<?php echo $edit_item['id']; ?>">
+                <div class="form-group">
+                    <label>Nombre del Autor</label>
+                    <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($edit_item['name']); ?>" required autofocus>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" name="edit_item" class="btn btn-primary" style="flex: 1;">Actualizar</button>
+                    <a href="authors.php" class="btn" style="background: #888; text-decoration: none; text-align: center;">Cancelar</a>
+                </div>
+            </form>
+        <?php else: ?>
+            <h3>Agregar Autor</h3><br>
+            <form method="POST">
+                <div class="form-group">
+                    <label>Nombre del Autor</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Ej: Borges, Jorge Luis">
+                </div>
+                <button type="submit" name="add_item" class="btn btn-primary">Guardar</button>
+            </form>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 
     <!-- Tabla -->
-    <div style="flex: 2;">
+    <div class="data-pane">
         <!-- Buscador -->
         <form method="GET" class="search-filters-bar" style="margin-bottom: 15px;" id="searchForm">
             <div class="search-input-wrapper">
@@ -107,13 +158,14 @@ if ($search !== '') $url_params['search'] = $search;
         </form>
 
         <div id="searchResults">
+        <div class="table-responsive">
         <table class="data-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Libros</th>
-                    <th>Acción</th>
+                    <th style="min-width: 140px;">Acción</th>
                 </tr>
             </thead>
             <tbody>
@@ -122,12 +174,13 @@ if ($search !== '') $url_params['search'] = $search;
                     $book_count->execute([$item['id']]);
                     $count = $book_count->fetchColumn();
                 ?>
-                <tr>
+                <tr <?php if ($edit_item && $edit_item['id'] == $item['id']) echo 'style="background-color: #fff9db;"'; ?>>
                     <td><?php echo $item['id']; ?></td>
-                    <td><?php echo htmlspecialchars($item['name']); ?></td>
+                    <td><strong><?php echo htmlspecialchars($item['name']); ?></strong></td>
                     <td><span class="status-badge status-available"><?php echo $count; ?></span></td>
                     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
                     <td>
+                        <a href="authors.php?edit=<?php echo $item['id']; ?>" class="btn btn-edit" style="margin-right: 5px;">Editar</a>
                         <a href="authors.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar autor? Se desvinculará de sus libros.');">Borrar</a>
                     </td>
                     <?php else: ?>
@@ -140,6 +193,7 @@ if ($search !== '') $url_params['search'] = $search;
                 <?php endif; ?>
             </tbody>
         </table>
+        </div>
 
         <!-- Paginación -->
         <?php if ($total_pages > 1): ?>

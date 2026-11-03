@@ -104,19 +104,20 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
 2. Dirígete a la sección **Libros** o accede a [`pages/add_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/add_book.php).
 3. Completa los campos del formulario:
    - **Título\***: Nombre de la obra.
-   - **Autor\***: Selección de autor registrado.
-   - **N° de Inventario / ISBN**: Código único identificatorio del ejemplar físico.
-   - **Editorial**: Casa editorial del libro.
+   - **Autor\***: Buscador en tiempo real. Escribe para autocompletar; si el autor no existe, se creará automáticamente al guardar.
+   - **Cantidad de Ejemplares (Copias)\***: Permite ingresar múltiples copias de una misma obra (ideal para donaciones o compras de varios ejemplares iguales).
+   - **N° de Inventario / ISBN\***: El sistema calcula y pre-completa automáticamente el siguiente número de inventario correlativo disponible respecto al último registrado en la base de datos (evitando colisiones o duplicados). Si se tipea un número, el validador en tiempo real comprueba si está libre o en uso.
+   - **Editorial**: Buscador en tiempo real. Si no existe, se creará automáticamente al guardar.
    - **Lugar de la Editorial**: Ciudad o país de publicación (ej. *Buenos Aires*, *Madrid*).
    - **Fecha de Publicación**: Fecha en que fue publicado el libro.
-   - **Categoría**: Clasificación temática.
+   - **Categoría**: Buscador en tiempo real (ej. *Literatura*, *Historia*). Si no existe, se creará automáticamente al guardar.
    - **Portada**: Imagen de portada (`.jpg`, `.png`, `.webp`, `.gif`) almacenada en [`uploads/books/`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/uploads/books).
    - **Notas (opcional)**: Notas internas de catalogación o estado del ejemplar.
    - **Observación (opcional)**: Observaciones complementarias sobre el libro.
    - **Estado Inicial**: `Disponible` por defecto.
-4. Haz clic en **"Guardar Libro"**.
+4. Haz clic en **"Guardar Libro"** (o **"Guardar N Ejemplares"**).
 
-### Guía 2.2: ¿Cómo registrar un préstamo y procesar su devolución?
+### Guía 2.2: ¿Cómo registrar un préstamo, renovarlo y procesar su devolución?
 #### Para prestar un libro:
 1. Accede a [`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php).
 2. En la sección **"Registrar Préstamo"**:
@@ -125,18 +126,23 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
    - **Turno**: Selecciona entre `Mañana`, `Tarde` o `Noche`.
    - **Curso**: Ingresa el curso del alumno (ej. *3ro A*, *1º 2da*).
    - **Documento / DNI (opcional)**: Documento numérico del solicitante.
-3. Presiona **"Registrar Préstamo"**. El sistema cambiará el estado del libro a `Prestado` y persistirá la transacción con auditoría completa.
+3. Presiona **"Registrar Préstamo"**. El sistema establecerá automáticamente un plazo límite de **1 semana (7 días)** en `fecha_devolucion_esperada`, cambiará el estado del libro a `Prestado` y persistirá la transacción con auditoría completa.
+
+#### Para renovar un préstamo:
+1. En la tabla de **Libros Actualmente Prestados**, visualiza la columna **Vencimiento / Límite** (muestra la fecha límite y el estado: en término, vence hoy o vencido).
+2. Haz clic en el botón azul **"↻ Renovar (+7d)"**.
+3. El sistema extenderá la fecha límite de devolución por 7 días adicionales y mostrará la notificación con la nueva fecha de vencimiento.
 
 #### Para registrar la devolución:
-1. En [`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php), localiza el ejemplar en la tabla de **Libros Actualmente Prestados**, donde se detallan: *Nº Inv.*, *Fecha*, *Título*, *Autor*, *Alumno/a*, *Turno*, *Curso*.
-2. Haz clic en el botón verde **"Devolver"**.
+1. En [`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php), localiza el ejemplar en la tabla de **Libros Actualmente Prestados**.
+2. Haz clic en el botón verde **"✓ Devolver"**.
 3. El sistema registrará la acción de devolución con su `fecha_devolucion_real = NOW()` y restituirá el libro a estado `Disponible`.
 
 ### Guía 2.3: ¿Cómo ejecutar la migración masiva de catálogos (Aguapay / ISO 2709)?
-1. Asegúrate de que el archivo ISO 2709 exportado desde Aguapay se encuentre en [`scripts_migracion/aguapay.iso`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/scripts_migracion/aguapay.iso).
+1. Asegúrate de que el archivo ISO 2709 exportado desde Aguapay se encuentre en [`scripts_y_herramientas/scripts_migracion/aguapay.iso`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/scripts_y_herramientas/scripts_migracion/aguapay.iso).
 2. Ejecuta el script de migración por consola:
 ```powershell
-php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scripts_migracion\migrate_aguapay.php"
+php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scripts_y_herramientas\scripts_migracion\migrate_aguapay.php"
 ```
 3. El script normalizará autores, categorías, editoriales e insertará los registros bibliográficos aplicando transacciones seguras por lotes.
 
@@ -160,7 +166,17 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
    - Presiona **"📤 Restaurar Base de Datos"** y confirma en el cuadro de diálogo.
    - El sistema ejecutará las sentencias SQL deshabilitando temporalmente las claves foráneas para preservar integridad y notificará la cantidad de sentencias ejecutadas.
 
-### Guía 2.6: ¿Cómo alojar el sistema en servidor Nginx y acceder desde cualquier PC por WiFi?
+### Guía 2.6: ¿Cómo editar Autores, Editoriales y Categorías sin eliminarlos?
+1. Dirígete a la sección correspondiente en el menú lateral:
+   - **Autores** ([`pages/authors.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/authors.php))
+   - **Editoriales** ([`pages/publishers.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/publishers.php))
+   - **Categorías** ([`pages/categories.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/categories.php))
+2. En la tabla de registros (o utilizando el buscador en tiempo real), localiza el registro deseado y presiona el botón naranja **"Editar"**.
+3. El formulario lateral izquierdo cambiará automáticamente a modo de edición, mostrando el ID y el nombre actual.
+4. Corrige el texto en el campo de nombre y presiona **"Actualizar"** (o **"Cancelar"** para descartar).
+5. El sistema actualizará el registro inmediatamente y mantendrá la vinculación íntegra con todos los libros existentes.
+
+### Guía 2.7: ¿Cómo alojar el sistema en servidor Nginx y acceder desde cualquier PC por WiFi?
 1. **En el servidor Linux (Ubuntu/Debian)**:
    - Clona o copia el repositorio a tu servidor.
    - Ejecuta el script de despliegue automatizado:
@@ -337,7 +353,8 @@ erDiagram
 | [`/api/search_entities_json.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/api/search_entities_json.php) | `GET` | `type` (`authors`, `publishers`, `categories`), `q` (string) | `application/json` | Devuelve sugerencias de entidades coincidentes para campos interactivos. |
 | [`/api/export_db.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/api/export_db.php) | `GET` | Ninguno (Requiere Admin) | `application/sql` (archivo adjunto) | Genera y descarga un volcado SQL streaming completo de la base de datos `library_system`. |
 | [`/pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php) | `POST` | `sql_file` (file), `confirm_restore` (flag) | Redirección 302 con Flash Message | Importa y ejecuta un archivo `.sql` de restauración con deshabilitación de claves foráneas. |
-| [`/pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php) | `POST` | `issue_book`, `book_id`, `lector_nombre`, `turno`, `curso`, `lector_documento` | Redirección 302 | Registra el préstamo de un libro con turno y curso. |
+| [`/pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php) | `POST` | `issue_book`, `book_id`, `lector_nombre`, `turno`, `curso`, `lector_documento` | Redirección 302 | Registra el préstamo de un libro con turno, curso y fecha límite de 1 semana. |
+| [`/pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php) | `GET` | `renew_book` (int, ID del libro) | Redirección 302 | Extiende la fecha límite de devolución del préstamo por 1 semana (7 días adicionales). |
 | [`/pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php) | `GET` | `return_book` (int, ID del libro) | Redirección 302 | Procesa la devolución registrando `fecha_devolucion_real = NOW()` y restituye estado `Disponible`. |
 
 ---

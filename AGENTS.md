@@ -22,7 +22,7 @@ Este archivo define las instrucciones operativas, arquitectura y restricciones p
 - [`api/search_books_json.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/api/search_books_json.php): Endpoint JSON para selector de libros en préstamos.
 - [`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php): Módulo transaccional de préstamos y devoluciones.
 - [`pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php): Herramientas de respaldo y restauración de base de datos.
-- [`scripts_migracion/migrate_aguapay.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/scripts_migracion/migrate_aguapay.php): Parser e importador de registros MARC / ISO 2709.
+- [`scripts_y_herramientas/scripts_migracion/migrate_aguapay.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/scripts_y_herramientas/scripts_migracion/migrate_aguapay.php): Parser e importador de registros MARC / ISO 2709.
 
 ---
 
@@ -40,5 +40,5 @@ Este archivo define las instrucciones operativas, arquitectura y restricciones p
 php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main"
 
 # Ejecutar migración de prueba
-php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scripts_migracion\migrate_aguapay.php"
+php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scripts_y_herramientas\scripts_migracion\migrate_aguapay.php"
 ```

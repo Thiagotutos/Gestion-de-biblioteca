@@ -55,19 +55,19 @@ if ($search !== '') $url_params['search'] = $search;
     <div class="alert alert-warning"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
 
-<div style="display:flex;gap:20px;">
+<div class="split-layout">
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
-    <div class="form-container" style="flex:1;height:max-content;">
+    <div class="form-container form-pane">
         <h3>Agregar Estante</h3><br>
         <form method="POST">
             <div class="form-group"><label>Nombre del Estante</label>
             <input type="text" name="name" class="form-control" required></div>
-            <button type="submit" name="add_item" class="btn btn-primary">Guardar</button>
+            <button type="submit" name="add_item" class="btn btn-primary" style="width: 100%;">Guardar</button>
         </form>
     </div>
     <?php endif; ?>
 
-    <div style="flex:2;">
+    <div class="data-pane">
         <form method="GET" class="search-filters-bar" style="margin-bottom:15px;">
             <div class="search-input-wrapper">
                 <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -79,6 +79,7 @@ if ($search !== '') $url_params['search'] = $search;
         </form>
 
         <div id="searchResults">
+        <div class="table-responsive">
         <table class="data-table"><thead><tr><th>ID</th><th>Nombre</th><th>Libros</th><th>Acción</th></tr></thead>
             <tbody>
                 <?php foreach ($racks as $item): 
@@ -96,6 +97,7 @@ if ($search !== '') $url_params['search'] = $search;
                 <?php if (empty($racks)): ?><tr><td colspan="4" style="text-align:center;">No hay estantes.</td></tr><?php endif; ?>
             </tbody>
         </table>
+        </div>
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?><a href="?<?php echo http_build_query(array_merge($url_params, ['page' => $page - 1])); ?>" class="pagination-btn">&laquo;</a><?php endif; ?>

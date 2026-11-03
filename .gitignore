@@ -1,11 +1,43 @@
-# Archivos privados / backups de la escuela (datos reales)
-20260512/
-bibliotecla/
-copia de seguridad/
-scripts_migracion/
+# =============================================================================
+# .gitignore - Sistema de Gestión de Biblioteca
+# =============================================================================
 
-# Archivos de datos o descargas temporales
+# Scripts auxiliares, herramientas de migración y respaldos históricos de Aguapey
+scripts_y_herramientas/
+
+# Bases de datos de producción con datos reales (solo se versiona database/database.sql limpio)
+database/database_produccion.sql
+database/library_system_clean.sql
+database/*_produccion.sql
+database/*_clean.sql
+database/*_completo.sql
+
+# Archivos binarios de datos o descargas temporales
 sheet_data.csv
 *.iso
 *.mst
-*.xrf
+*.xrf
+*.rar
+*.zip
+
+# Variables de entorno y credenciales locales sensibles
+.env
+.env.*
+*.local
+
+# Respaldos de base de datos generados en tiempo de ejecución
+respaldo_*.sql
+backup_*.sql
+
+# Archivos de registro y depuración
+*.log
+error_log
+
+# Archivos del sistema operativo y entornos de desarrollo (IDE)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scripts locales temporales en raíz con configuraciones personales
+subir_todo.ps1

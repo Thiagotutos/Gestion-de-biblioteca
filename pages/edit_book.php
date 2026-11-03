@@ -27,19 +27,39 @@ if (!$libro) {
     exit;
 }
 
-$categories = $pdo->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
-$authors = $pdo->query("SELECT * FROM authors ORDER BY name ASC")->fetchAll();
-$publishers = $pdo->query("SELECT * FROM publishers ORDER BY name ASC")->fetchAll();
-$racks = [];
+// Obtener nombres actuales de autor, editorial y categoría
+$curr_author = '';
+if (!empty($libro['author_id'])) {
+    $stmt_ca = $pdo->prepare("SELECT name FROM authors WHERE id = ?");
+    $stmt_ca->execute([$libro['author_id']]);
+    $curr_author = $stmt_ca->fetchColumn() ?: '';
+}
+
+$curr_publisher = '';
+if (!empty($libro['publisher_id'])) {
+    $stmt_cp = $pdo->prepare("SELECT name FROM publishers WHERE id = ?");
+    $stmt_cp->execute([$libro['publisher_id']]);
+    $curr_publisher = $stmt_cp->fetchColumn() ?: '';
+}
+
+$curr_category = '';
+if (!empty($libro['category_id'])) {
+    $stmt_cc = $pdo->prepare("SELECT name FROM categories WHERE id = ?");
+    $stmt_cc->execute([$libro['category_id']]);
+    $curr_category = $stmt_cc->fetchColumn() ?: '';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo = trim($_POST['titulo'] ?? '');
-    $author_id = $_POST['author_id'] ? (int)$_POST['author_id'] : null;
+    $author_id = !empty($_POST['author_id']) ? (int)$_POST['author_id'] : null;
+    $author_name = trim($_POST['author_name'] ?? '');
     $isbn = trim($_POST['isbn'] ?? '');
-    $publisher_id = $_POST['publisher_id'] ? (int)$_POST['publisher_id'] : null;
+    $publisher_id = !empty($_POST['publisher_id']) ? (int)$_POST['publisher_id'] : null;
+    $publisher_name = trim($_POST['publisher_name'] ?? '');
     $lugar_editorial = trim($_POST['lugar_editorial'] ?? '') ?: null;
     $fecha_publicacion = !empty($_POST['fecha_publicacion']) ? $_POST['fecha_publicacion'] : null;
-    $category_id = $_POST['category_id'] ? (int)$_POST['category_id'] : null;
+    $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+    $category_name = trim($_POST['category_name'] ?? '');
     $notas = trim($_POST['notas'] ?? '') ?: null;
     $observacion = trim($_POST['observacion'] ?? '') ?: null;
     $rack_id = null;
@@ -52,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['eliminar_imagen']) && $_POST['eliminar_imagen'] === '1') {
         if ($imagen) {
             $oldPath = __DIR__ . '/../uploads/books/' . $imagen;
-            if (file_exists($oldPath)) unlink($oldPath);
+            if (file_exists($oldPath)) @unlink($oldPath);
         }
         $imagen = null;
     }
@@ -65,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Eliminar imagen anterior si existe
             if ($libro['imagen']) {
                 $oldPath = __DIR__ . '/../uploads/books/' . $libro['imagen'];
-                if (file_exists($oldPath)) unlink($oldPath);
+                if (file_exists($oldPath)) @unlink($oldPath);
             }
             $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
             $imagen = uniqid('book_') . '.' . $ext;
@@ -79,14 +99,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (!isset($error) && $titulo && $author_id) {
-        $stmt = $pdo->prepare("UPDATE books SET titulo=?, author_id=?, isbn=?, publisher_id=?, lugar_editorial=?, fecha_publicacion=?, category_id=?, rack_id=?, imagen=?, notas=?, observacion=?, estado=? WHERE id=?");
-        $stmt->execute([$titulo, $author_id, $isbn, $publisher_id, $lugar_editorial, $fecha_publicacion, $category_id, $rack_id, $imagen, $notas, $observacion, $estado, $id]);
-        $_SESSION['success_msg'] = "Libro actualizado exitosamente.";
-        header('Location: books.php');
-        exit;
-    } elseif (!isset($error)) {
-        $error = "Título y Autor son obligatorios.";
+    // Validar duplicado de inventario si se modifica
+    if (!isset($error) && !empty($isbn)) {
+        $stmt_check = $pdo->prepare("SELECT id, titulo FROM books WHERE isbn = ? AND id != ? LIMIT 1");
+        $stmt_check->execute([$isbn, $id]);
+        $duplicado = $stmt_check->fetch(PDO::FETCH_ASSOC);
+        if ($duplicado) {
+            $error = "El Nº de Inventario '{$isbn}' ya está asignado al libro '{$duplicado['titulo']}' (ID: {$duplicado['id']}). Elige otro número para evitar duplicados.";
+        }
+    }
+
+    if (!isset($error)) {
+        if (!$titulo) {
+            $error = "El Título del libro es obligatorio.";
+        } elseif (!$author_id && $author_name === '') {
+            $error = "El Autor es obligatorio. Busca o escribe uno.";
+        }
+    }
+
+    if (!isset($error)) {
+        $pdo->beginTransaction();
+        try {
+            // 1. Resolver o Crear Autor si no existe
+            if (!$author_id && $author_name !== '') {
+                $stmt_a = $pdo->prepare("SELECT id FROM authors WHERE LOWER(TRIM(name)) = LOWER(?) LIMIT 1");
+                $stmt_a->execute([$author_name]);
+                $existing_a = $stmt_a->fetchColumn();
+                if ($existing_a) {
+                    $author_id = (int)$existing_a;
+                } else {
+                    $stmt_ins_a = $pdo->prepare("INSERT INTO authors (name) VALUES (?)");
+                    $stmt_ins_a->execute([$author_name]);
+                    $author_id = (int)$pdo->lastInsertId();
+                }
+            }
+
+            // 2. Resolver o Crear Editorial si no existe
+            if (!$publisher_id && $publisher_name !== '') {
+                $stmt_p = $pdo->prepare("SELECT id FROM publishers WHERE LOWER(TRIM(name)) = LOWER(?) LIMIT 1");
+                $stmt_p->execute([$publisher_name]);
+                $existing_p = $stmt_p->fetchColumn();
+                if ($existing_p) {
+                    $publisher_id = (int)$existing_p;
+                } else {
+                    $stmt_ins_p = $pdo->prepare("INSERT INTO publishers (name) VALUES (?)");
+                    $stmt_ins_p->execute([$publisher_name]);
+                    $publisher_id = (int)$pdo->lastInsertId();
+                }
+            }
+
+            // 3. Resolver o Crear Categoría si no existe
+            if (!$category_id && $category_name !== '') {
+                $stmt_c = $pdo->prepare("SELECT id FROM categories WHERE LOWER(TRIM(name)) = LOWER(?) LIMIT 1");
+                $stmt_c->execute([$category_name]);
+                $existing_c = $stmt_c->fetchColumn();
+                if ($existing_c) {
+                    $category_id = (int)$existing_c;
+                } else {
+                    $stmt_ins_c = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+                    $stmt_ins_c->execute([$category_name]);
+                    $category_id = (int)$pdo->lastInsertId();
+                }
+            }
+
+            $stmt = $pdo->prepare("UPDATE books SET titulo=?, author_id=?, isbn=?, publisher_id=?, lugar_editorial=?, fecha_publicacion=?, category_id=?, rack_id=?, imagen=?, notas=?, observacion=?, estado=? WHERE id=?");
+            $stmt->execute([$titulo, $author_id, $isbn, $publisher_id, $lugar_editorial, $fecha_publicacion, $category_id, $rack_id, $imagen, $notas, $observacion, $estado, $id]);
+            
+            $pdo->commit();
+            $_SESSION['success_msg'] = "Libro actualizado exitosamente.";
+            header('Location: books.php');
+            exit;
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $error = $e->getMessage();
+        }
     }
 }
 ?>
@@ -94,58 +182,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="content-header">
-    <h2>Editar Libro</h2>
+    <h2>Editar Libro #<?php echo $id; ?></h2>
     <a href="books.php" class="btn btn-primary" style="background-color: #666;">Volver</a>
 </div>
 
-<div class="form-container">
+<div class="form-container" style="max-width: 800px; width: 100%;">
     <?php if (isset($error)): ?>
         <div class="alert alert-warning"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" autocomplete="off">
         <div class="form-group">
             <label>Título *</label>
-            <input type="text" name="titulo" class="form-control" required value="<?php echo htmlspecialchars($libro['titulo']); ?>">
+            <input type="text" name="titulo" class="form-control" required value="<?php echo htmlspecialchars($_POST['titulo'] ?? $libro['titulo']); ?>">
         </div>
-        <div class="form-group">
-            <label>Autor *</label>
-            <select name="author_id" class="form-control" required>
-                <option value="">-- Seleccionar Autor --</option>
-                <?php foreach ($authors as $a): ?>
-                    <option value="<?php echo $a['id']; ?>" <?php if ($libro['author_id'] == $a['id']) echo 'selected'; ?>><?php echo htmlspecialchars($a['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
+
+        <!-- Buscador en tiempo real: Autor -->
+        <div class="form-group" style="position: relative;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Autor *</span>
+                <span id="authorStatusBadge" class="status-badge" style="<?php echo $curr_author ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
+                    <?php echo $curr_author ? '✓ Seleccionado' : ''; ?>
+                </span>
+            </label>
+            <div style="position: relative;">
+                <input type="text" id="authorSearchInput" name="author_name" class="form-control" placeholder="Escribe para buscar o ingresar autor..." value="<?php echo htmlspecialchars($_POST['author_name'] ?? $curr_author); ?>" autocomplete="off" required>
+                <input type="hidden" name="author_id" id="selectedAuthorId" value="<?php echo htmlspecialchars($_POST['author_id'] ?? $libro['author_id']); ?>">
+                <span id="authorSpinner" class="search-spinner" style="display: none;"></span>
+            </div>
+            <div id="authorSearchResults" class="autocomplete-dropdown" style="display: none;"></div>
+            <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">
+                🔍 Escribe el nombre del autor. Si no existe, se creará automáticamente.
+            </small>
         </div>
+
         <div class="form-group">
             <label>Nº Inventario</label>
-            <input type="text" name="isbn" class="form-control" value="<?php echo htmlspecialchars($libro['isbn'] ?? ''); ?>">
+            <input type="text" name="isbn" class="form-control" value="<?php echo htmlspecialchars($_POST['isbn'] ?? $libro['isbn'] ?? ''); ?>">
         </div>
-        <div class="form-group">
-            <label>Editorial</label>
-            <select name="publisher_id" class="form-control">
-                <option value="">-- Seleccionar Editorial --</option>
-                <?php foreach ($publishers as $p): ?>
-                    <option value="<?php echo $p['id']; ?>" <?php if ($libro['publisher_id'] == $p['id']) echo 'selected'; ?>><?php echo htmlspecialchars($p['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
+
+        <!-- Buscador en tiempo real: Editorial -->
+        <div class="form-group" style="position: relative;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Editorial</span>
+                <span id="publisherStatusBadge" class="status-badge" style="<?php echo $curr_publisher ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
+                    <?php echo $curr_publisher ? '✓ Seleccionado' : ''; ?>
+                </span>
+            </label>
+            <div style="position: relative;">
+                <input type="text" id="publisherSearchInput" name="publisher_name" class="form-control" placeholder="Escribe para buscar o ingresar editorial..." value="<?php echo htmlspecialchars($_POST['publisher_name'] ?? $curr_publisher); ?>" autocomplete="off">
+                <input type="hidden" name="publisher_id" id="selectedPublisherId" value="<?php echo htmlspecialchars($_POST['publisher_id'] ?? $libro['publisher_id']); ?>">
+                <span id="publisherSpinner" class="search-spinner" style="display: none;"></span>
+            </div>
+            <div id="publisherSearchResults" class="autocomplete-dropdown" style="display: none;"></div>
         </div>
+
         <div class="form-group">
             <label>Lugar de la Editorial</label>
-            <input type="text" name="lugar_editorial" class="form-control" value="<?php echo htmlspecialchars($libro['lugar_editorial'] ?? ''); ?>" placeholder="Ej: Buenos Aires">
+            <input type="text" name="lugar_editorial" class="form-control" value="<?php echo htmlspecialchars($_POST['lugar_editorial'] ?? $libro['lugar_editorial'] ?? ''); ?>" placeholder="Ej: Buenos Aires">
         </div>
+
         <div class="form-group">
             <label>Fecha de Publicación</label>
-            <input type="date" name="fecha_publicacion" class="form-control" value="<?php echo htmlspecialchars($libro['fecha_publicacion'] ?? ''); ?>">
+            <input type="date" name="fecha_publicacion" class="form-control" value="<?php echo htmlspecialchars($_POST['fecha_publicacion'] ?? $libro['fecha_publicacion'] ?? ''); ?>">
         </div>
-        <div class="form-group">
-            <label>Categoría</label>
-            <select name="category_id" class="form-control">
-                <option value="">-- Seleccionar Categoría --</option>
-                <?php foreach ($categories as $c): ?>
-                    <option value="<?php echo $c['id']; ?>" <?php if ($libro['category_id'] == $c['id']) echo 'selected'; ?>><?php echo htmlspecialchars($c['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
+
+        <!-- Buscador en tiempo real: Categoría -->
+        <div class="form-group" style="position: relative;">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Categoría</span>
+                <span id="categoryStatusBadge" class="status-badge" style="<?php echo $curr_category ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
+                    <?php echo $curr_category ? '✓ Seleccionado' : ''; ?>
+                </span>
+            </label>
+            <div style="position: relative;">
+                <input type="text" id="categorySearchInput" name="category_name" class="form-control" placeholder="Escribe para buscar o ingresar categoría..." value="<?php echo htmlspecialchars($_POST['category_name'] ?? $curr_category); ?>" autocomplete="off">
+                <input type="hidden" name="category_id" id="selectedCategoryId" value="<?php echo htmlspecialchars($_POST['category_id'] ?? $libro['category_id']); ?>">
+                <span id="categorySpinner" class="search-spinner" style="display: none;"></span>
+            </div>
+            <div id="categorySearchResults" class="autocomplete-dropdown" style="display: none;"></div>
         </div>
 
         <div class="form-group">
@@ -180,26 +295,195 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="form-group">
             <label>Notas (opcional)</label>
-            <textarea name="notas" class="form-control" rows="3" placeholder="Notas internas..."><?php echo htmlspecialchars($libro['notas'] ?? ''); ?></textarea>
+            <textarea name="notas" class="form-control" rows="3" placeholder="Notas internas..."><?php echo htmlspecialchars($_POST['notas'] ?? $libro['notas'] ?? ''); ?></textarea>
         </div>
 
         <div class="form-group">
             <label>Observación (opcional)</label>
-            <textarea name="observacion" class="form-control" rows="3" placeholder="Observaciones adicionales..."><?php echo htmlspecialchars($libro['observacion'] ?? ''); ?></textarea>
+            <textarea name="observacion" class="form-control" rows="3" placeholder="Observaciones adicionales..."><?php echo htmlspecialchars($_POST['observacion'] ?? $libro['observacion'] ?? ''); ?></textarea>
         </div>
+
         <div class="form-group">
             <label>Estado</label>
             <select name="estado" class="form-control">
-                <option value="Disponible" <?php if ($libro['estado'] == 'Disponible') echo 'selected'; ?>>Disponible</option>
-                <option value="Prestado" <?php if ($libro['estado'] == 'Prestado') echo 'selected'; ?>>Prestado</option>
-                <option value="Extraviado" <?php if ($libro['estado'] == 'Extraviado') echo 'selected'; ?>>Extraviado</option>
+                <option value="Disponible" <?php if (($libro['estado'] ?? '') == 'Disponible') echo 'selected'; ?>>Disponible</option>
+                <option value="Prestado" <?php if (($libro['estado'] ?? '') == 'Prestado') echo 'selected'; ?>>Prestado</option>
+                <option value="Extraviado" <?php if (($libro['estado'] ?? '') == 'Extraviado') echo 'selected'; ?>>Extraviado</option>
             </select>
         </div>
-        <button type="submit" class="btn btn-primary">Actualizar Libro</button>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">Actualizar Libro</button>
     </form>
 </div>
 
 <script>
+// ============================================================================
+// Autocompletado dinámico con AJAX compatible con CRT / navegadores antiguos
+// ============================================================================
+function setupAutocomplete(config) {
+    var input = document.getElementById(config.inputId);
+    var hidden = document.getElementById(config.hiddenId);
+    var dropdown = document.getElementById(config.dropdownId);
+    var spinner = document.getElementById(config.spinnerId);
+    var badge = document.getElementById(config.badgeId);
+    var timer = null;
+    var xhr = null;
+
+    if (!input || !dropdown) return;
+
+    function updateBadge(status, text) {
+        if (!badge) return;
+        if (status === 'found') {
+            badge.style.display = 'inline-block';
+            badge.style.background = '#2e7d32';
+            badge.style.color = '#fff';
+            badge.textContent = text || '✓ Existente';
+        } else if (status === 'new') {
+            badge.style.display = 'inline-block';
+            badge.style.background = '#0288d1';
+            badge.style.color = '#fff';
+            badge.textContent = text || '✚ Se creará nuevo';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function doSearch() {
+        var query = input.value.trim();
+        if (query.length < 1) {
+            dropdown.style.display = 'none';
+            if (spinner) spinner.style.display = 'none';
+            return;
+        }
+
+        if (spinner) spinner.style.display = 'inline-block';
+        if (xhr) xhr.abort();
+
+        if (window.XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else {
+            xhr = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+
+        xhr.open('GET', '../api/search_entities_json.php?type=' + encodeURIComponent(config.type) + '&q=' + encodeURIComponent(query), true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (spinner) spinner.style.display = 'none';
+                if (xhr.status === 200) {
+                    try {
+                        var items = JSON.parse(xhr.responseText);
+                        renderDropdown(items, query);
+                    } catch (e) {
+                        dropdown.style.display = 'none';
+                    }
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    function renderDropdown(items, query) {
+        dropdown.innerHTML = '';
+        var exactMatch = false;
+
+        items.forEach(function(item) {
+            if (item.name.toLowerCase() === query.toLowerCase()) {
+                exactMatch = true;
+            }
+            var div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.innerHTML = '<span>' + escapeHtml(item.name) + '</span>' +
+                            '<span style="font-size:0.75rem; color:#94a3b8; background:#f1f5f9; padding:2px 6px; border-radius:10px;">' + (item.count || 0) + ' libros</span>';
+            div.addEventListener('click', function() {
+                input.value = item.name;
+                hidden.value = item.id;
+                dropdown.style.display = 'none';
+                updateBadge('found', '✓ Seleccionado');
+            });
+            dropdown.appendChild(div);
+        });
+
+        if (!exactMatch && query.length > 0) {
+            var createDiv = document.createElement('div');
+            createDiv.className = 'autocomplete-create-item';
+            createDiv.innerHTML = '✚ Crear ' + escapeHtml(config.singular) + ': <strong>"' + escapeHtml(query) + '"</strong>';
+            createDiv.addEventListener('click', function() {
+                hidden.value = '';
+                dropdown.style.display = 'none';
+                updateBadge('new', 'Se creará nuevo');
+            });
+            dropdown.appendChild(createDiv);
+        }
+
+        if (dropdown.children.length > 0) {
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+    }
+
+    input.addEventListener('input', function() {
+        hidden.value = '';
+        if (input.value.trim() === '') {
+            updateBadge(null, '');
+            dropdown.style.display = 'none';
+            return;
+        }
+        updateBadge('new', 'Se creará nuevo');
+        clearTimeout(timer);
+        timer = setTimeout(doSearch, 250);
+    });
+
+    input.addEventListener('focus', function() {
+        if (input.value.trim().length > 0) {
+            doSearch();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target !== input && e.target !== dropdown && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+setupAutocomplete({
+    inputId: 'authorSearchInput',
+    hiddenId: 'selectedAuthorId',
+    dropdownId: 'authorSearchResults',
+    spinnerId: 'authorSpinner',
+    badgeId: 'authorStatusBadge',
+    type: 'authors',
+    singular: 'Autor'
+});
+
+setupAutocomplete({
+    inputId: 'publisherSearchInput',
+    hiddenId: 'selectedPublisherId',
+    dropdownId: 'publisherSearchResults',
+    spinnerId: 'publisherSpinner',
+    badgeId: 'publisherStatusBadge',
+    type: 'publishers',
+    singular: 'Editorial'
+});
+
+setupAutocomplete({
+    inputId: 'categorySearchInput',
+    hiddenId: 'selectedCategoryId',
+    dropdownId: 'categorySearchResults',
+    spinnerId: 'categorySpinner',
+    badgeId: 'categoryStatusBadge',
+    type: 'categories',
+    singular: 'Categoría'
+});
+
+// Manejo de imagen
 const uploadArea = document.getElementById('uploadArea');
 const imageInput = document.getElementById('imagenInput');
 const imagePreview = document.getElementById('imagePreview');
@@ -207,32 +491,36 @@ const placeholder = document.getElementById('uploadPlaceholder');
 const eliminarInput = document.getElementById('eliminarImagen');
 const btnEliminar = document.getElementById('btnEliminarImg');
 
-uploadArea.addEventListener('click', () => imageInput.click());
-uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-    if (e.dataTransfer.files.length) {
-        imageInput.files = e.dataTransfer.files;
-        showPreview(e.dataTransfer.files[0]);
-    }
-});
+if (uploadArea && imageInput) {
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            imageInput.files = e.dataTransfer.files;
+            showPreview(e.dataTransfer.files[0]);
+        }
+    });
 
-imageInput.addEventListener('change', (e) => {
-    if (e.target.files.length) {
-        showPreview(e.target.files[0]);
-        eliminarInput.value = '0';
-    }
-});
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            showPreview(e.target.files[0]);
+            if (eliminarInput) eliminarInput.value = '0';
+        }
+    });
+}
 
 if (btnEliminar) {
     btnEliminar.addEventListener('click', () => {
-        imagePreview.style.display = 'none';
-        imagePreview.src = '';
-        placeholder.style.display = '';
-        eliminarInput.value = '1';
-        imageInput.value = '';
+        if (imagePreview) {
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+        }
+        if (placeholder) placeholder.style.display = '';
+        if (eliminarInput) eliminarInput.value = '1';
+        if (imageInput) imageInput.value = '';
         btnEliminar.style.display = 'none';
     });
 }
@@ -242,7 +530,7 @@ function showPreview(file) {
     reader.onload = (e) => {
         imagePreview.src = e.target.result;
         imagePreview.style.display = 'block';
-        placeholder.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
     };
     reader.readAsDataURL(file);
 }

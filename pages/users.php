@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
             $stmt->execute([$nombre, $email, $rol, $password]);
             $_SESSION['success_msg'] = "Usuario agregado exitosamente.";
         } catch (Exception $e) {
-            $error = "El correo ya está registrado.";
+            $_SESSION['error_msg'] = "El correo '$email' ya está registrado o hubo un error al crear la cuenta.";
         }
         header('Location: users.php');
         exit;
@@ -32,12 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
 }
 
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    if ($id != $_SESSION['user_id']) { // No borrarse a si mismo
-        $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
-        $_SESSION['success_msg'] = "Usuario eliminado.";
+    $id = (int)$_GET['delete'];
+    if ($id != $_SESSION['user_id']) { // No borrarse a sí mismo
+        try {
+            // Verificar si el usuario tiene transacciones de préstamos registradas
+            $stmt_chk = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE librarian_id = ? OR user_id = ?");
+            $stmt_chk->execute([$id, $id]);
+            if ($stmt_chk->fetchColumn() > 0) {
+                $_SESSION['error_msg'] = "No se puede eliminar este usuario porque tiene préstamos o devoluciones asociadas en el historial de transacciones.";
+            } else {
+                $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
+                $_SESSION['success_msg'] = "Usuario eliminado exitosamente.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['error_msg'] = "Error al eliminar usuario: " . $e->getMessage();
+        }
     } else {
-        $_SESSION['error_msg'] = "No puedes eliminar tu propia cuenta.";
+        $_SESSION['error_msg'] = "No puedes eliminar tu propia cuenta de sesión actual.";
     }
     header('Location: users.php');
     exit;
@@ -63,9 +74,9 @@ $users = $stmt->fetchAll();
     <div class="alert alert-warning"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
 
-<div style="display: flex; gap: 20px;">
+<div class="split-layout">
     <!-- Formulario -->
-    <div class="form-container" style="flex: 1; height: max-content;">
+    <div class="form-container form-pane">
         <h3>Agregar Usuario</h3><br>
         <form method="POST">
             <div class="form-group">
@@ -88,12 +99,13 @@ $users = $stmt->fetchAll();
                 <label>Contraseña Provisional</label>
                 <input type="text" name="password" class="form-control" value="123456" required>
             </div>
-            <button type="submit" name="add_user" class="btn btn-primary">Crear Usuario</button>
+            <button type="submit" name="add_user" class="btn btn-primary" style="width: 100%;">Crear Usuario</button>
         </form>
     </div>
 
     <!-- Tabla -->
-    <div style="flex: 2;">
+    <div class="data-pane">
+        <div class="table-responsive">
         <table class="data-table">
             <thead>
                 <tr>
@@ -116,6 +128,7 @@ $users = $stmt->fetchAll();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 

@@ -11,8 +11,8 @@ set -e
 # ===================== CONFIGURACIÓN =====================
 DB_NAME="library_system"
 DB_USER="biblioteca_user"
-DB_PASS="BibliotecaSegura2026!" # Contraseña para el usuario de la app
-MYSQL_ROOT_PASS="123ferchu127"   # Contraseña de root de MySQL (dejar vacía si no tiene)
+DB_PASS="CambiarPorPasswordSegura2026!" # Contraseña para el usuario de la app
+MYSQL_ROOT_PASS=""                     # Contraseña de root de MySQL (dejar vacía si no tiene)
 APP_DIR="/var/www/biblioteca"
 # =========================================================
 
