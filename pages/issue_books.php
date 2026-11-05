@@ -360,7 +360,6 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                         <option value="">-- Seleccionar Turno --</option>
                         <option value="Mañana">Mañana</option>
                         <option value="Tarde">Tarde</option>
-                        <option value="Noche">Noche</option>
                     </select>
                 </div>
                 <div class="form-group">

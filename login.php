@@ -30,12 +30,12 @@ unset($_SESSION['login_error']);
         <form action="auth.php" method="POST">
             <div class="form-group">
                 <label for="email">Correo Electrónico</label>
-                <input type="email" name="email" id="email" class="form-control" required placeholder="admin@biblioteca.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido con dominio completo (ej: admin@biblioteca.com)">
+                <input type="email" name="email" id="email" class="form-control" required placeholder="Ingresa tu correo electrónico" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido con dominio completo">
             </div>
             <div class="form-group">
                 <label for="password">Contraseña</label>
                 <div style="position: relative; display: flex; align-items: center;">
-                    <input type="password" name="password" id="password" class="form-control" required placeholder="admin123" style="padding-right: 42px;">
+                    <input type="password" name="password" id="password" class="form-control" required placeholder="Ingresa tu contraseña" style="padding-right: 42px;">
                     <button type="button" class="btn-pwd-eye" style="position: absolute; right: 8px; z-index: 2;" onclick="toggleLoginPassword(this)" title="Mostrar / Ocultar contraseña">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
