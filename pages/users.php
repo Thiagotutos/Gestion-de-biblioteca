@@ -43,11 +43,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Validación estricta de correo electrónico (debe incluir dominio y TLD válido, ej: @gmail.com)
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
-            $_SESSION['error_msg'] = "El correo electrónico '$email' no es válido. Debe incluir un dominio completo (ejemplo: usuario@gmail.com).";
+        // 1. Validación de nombre: solo letras, espacios, acentos (3 a 60 caracteres)
+        if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 60) {
+            $_SESSION['error_msg'] = "El nombre debe tener entre 3 y 60 caracteres.";
             header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
             exit;
+        }
+        if (!preg_match('/^[\p{L}\s\.\'-]{3,60}$/u', $nombre)) {
+            $_SESSION['error_msg'] = "El nombre solo puede contener letras y espacios (no se permiten caracteres especiales como @, #, $, números, etc.).";
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
+        }
+
+        // 2. Validación estricta de correo electrónico (entre 6 y 80 caracteres, dominio y TLD válido)
+        if (strlen($email) < 6 || strlen($email) > 80 || !filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/', $email)) {
+            $_SESSION['error_msg'] = "El correo electrónico '$email' no es válido. Debe tener formato completo con dominio (ejemplo: usuario@gmail.com, máx. 80 caracteres).";
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
+        }
+
+        // 2.1 Validación de dominio y detección de errores tipográficos (Gmail, Hotmail, Outlook, Yahoo)
+        $email_parts = explode('@', strtolower($email));
+        $email_user = $email_parts[0] ?? '';
+        $email_domain = $email_parts[1] ?? '';
+
+        $typos_dominios = [
+            // Typos de Gmail
+            'gma.com'       => 'gmail.com',
+            'gmai.com'      => 'gmail.com',
+            'gamil.com'     => 'gmail.com',
+            'gmial.com'     => 'gmail.com',
+            'gmaill.com'    => 'gmail.com',
+            'gmal.com'      => 'gmail.com',
+            'gmeil.com'     => 'gmail.com',
+            'gemail.com'    => 'gmail.com',
+            'gmail.con'     => 'gmail.com',
+            'gmail.co'      => 'gmail.com',
+            'gmai.co'       => 'gmail.com',
+            'gmil.com'      => 'gmail.com',
+            'gma.co'        => 'gmail.com',
+            'gimail.com'    => 'gmail.com',
+
+            // Typos de Hotmail
+            'hotm.com'      => 'hotmail.com',
+            'hotmai.com'    => 'hotmail.com',
+            'hotmal.com'    => 'hotmail.com',
+            'hotmaill.com'  => 'hotmail.com',
+            'hotmial.com'   => 'hotmail.com',
+            'hotmeil.com'   => 'hotmail.com',
+            'hotmail.con'   => 'hotmail.com',
+            'hotmail.co'    => 'hotmail.com',
+            'jotmail.com'   => 'hotmail.com',
+            'jotm.com'      => 'hotmail.com',
+            'hormail.com'   => 'hotmail.com',
+
+            // Typos de Outlook
+            'outlok.com'    => 'outlook.com',
+            'outloo.com'    => 'outlook.com',
+            'outlock.com'   => 'outlook.com',
+            'outluk.com'    => 'outlook.com',
+            'outlook.con'   => 'outlook.com',
+            'ootlook.com'   => 'outlook.com',
+            'outloock.com'  => 'outlook.com',
+
+            // Typos de Yahoo
+            'yaho.com'      => 'yahoo.com',
+            'yahooo.com'    => 'yahoo.com',
+            'yahu.com'      => 'yahoo.com',
+            'yahoo.con'     => 'yahoo.com',
+            'yaho.com.ar'   => 'yahoo.com.ar',
+            'yahooo.com.ar' => 'yahoo.com.ar',
+        ];
+
+        if (isset($typos_dominios[$email_domain])) {
+            $sugerido = $email_user . '@' . $typos_dominios[$email_domain];
+            $_SESSION['error_msg'] = "El correo contiene un dominio erróneo ('@$email_domain'). ¿Quisiste escribir '$sugerido'? Por favor corrígelo para continuar.";
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
+        }
+
+        // Dominios de proveedores de correo válidos y reconocidos
+        $dominios_validos = [
+            'gmail.com', 'googlemail.com',
+            'hotmail.com', 'hotmail.es', 'hotmail.com.ar',
+            'outlook.com', 'outlook.es', 'outlook.com.ar',
+            'live.com', 'msn.com',
+            'yahoo.com', 'yahoo.com.ar', 'yahoo.es',
+            'icloud.com', 'me.com', 'mac.com',
+            'proton.me', 'protonmail.com',
+            'zoho.com', 'aol.com',
+            'correo.com', 'biblioteca.com'
+        ];
+
+        $es_institucional = (bool) preg_match('/\.(edu|gob|gov|org)(\.[a-z]{2})?$/i', $email_domain) || (bool) preg_match('/\.edu\.ar$/i', $email_domain);
+
+        if (!in_array($email_domain, $dominios_validos, true) && !$es_institucional) {
+            // Verificar si el dominio posee servidores de correo reales en Internet (MX o A)
+            if (function_exists('checkdnsrr')) {
+                $has_mx = @checkdnsrr($email_domain, 'MX');
+                $has_a = @checkdnsrr($email_domain, 'A');
+                if (!$has_mx && !$has_a) {
+                    $_SESSION['error_msg'] = "El dominio '@$email_domain' no es válido ni posee servidores de correo activos. Utiliza un correo real (ej: Gmail, Hotmail, Outlook o tu dominio escolar).";
+                    header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+                    exit;
+                }
+            }
+        }
+
+        // 3. Validación de contraseña (mínimo 6 caracteres, máximo 30)
+        if ($user_id === 0) {
+            if ($raw_pass === '') {
+                $raw_pass = '123456'; // Contraseña provisional por defecto
+            }
+            if (strlen($raw_pass) < 6 || strlen($raw_pass) > 30) {
+                $_SESSION['error_msg'] = "La contraseña debe tener entre 6 y 30 caracteres.";
+                header('Location: users.php');
+                exit;
+            }
+        } else {
+            if ($raw_pass !== '' && (strlen($raw_pass) < 6 || strlen($raw_pass) > 30)) {
+                $_SESSION['error_msg'] = "La nueva contraseña debe tener entre 6 y 30 caracteres.";
+                header('Location: users.php?edit=' . $user_id);
+                exit;
+            }
         }
 
         try {
@@ -143,7 +261,7 @@ $users = $stmt->fetchAll();
     <!-- Formulario (Alta / Edición) -->
     <div class="form-container form-pane">
         <h3><?php echo $edit_user ? 'Editar Usuario' : 'Agregar Usuario'; ?></h3><br>
-        <form method="POST">
+        <form method="POST" id="formUser">
             <?php if ($edit_user): ?>
             <input type="hidden" name="user_id" value="<?php echo $edit_user['id']; ?>">
             <?php endif; ?>
@@ -151,11 +269,17 @@ $users = $stmt->fetchAll();
             <div class="form-grid-fields">
                 <div class="form-group">
                     <label>Nombre Completo *</label>
-                    <input type="text" name="nombre" class="form-control" value="<?php echo htmlspecialchars($edit_user['nombre'] ?? ''); ?>" required placeholder="Ej: Juan Pérez">
+                    <input type="text" name="nombre" id="userNombre" class="form-control" value="<?php echo htmlspecialchars($edit_user['nombre'] ?? ''); ?>" required placeholder="Ej: Juan Pérez" minlength="3" maxlength="60" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\.\'-]{3,60}$" title="Solo letras y espacios (entre 3 y 60 caracteres, sin números ni símbolos)">
+                    <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Solo letras y espacios (entre 3 y 60 caracteres).</small>
                 </div>
                 <div class="form-group">
                     <label>Correo Electrónico *</label>
-                    <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($edit_user['email'] ?? ''); ?>" required placeholder="correo@ejemplo.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido con dominio completo (ej: usuario@gmail.com)">
+                    <input type="email" name="email" id="userEmail" class="form-control" value="<?php echo htmlspecialchars($edit_user['email'] ?? ''); ?>" required placeholder="correo@ejemplo.com" maxlength="80" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$" title="Ingrese un correo electrónico válido con dominio completo (ej: usuario@gmail.com, máx. 80 caracteres)">
+                    <div id="emailSuggestionBox" style="display: none; margin-top: 5px; padding: 6px 10px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; font-size: 0.82rem; color: #b78103; align-items: center; justify-content: space-between;">
+                        <span>⚠️ ¿Quisiste escribir <strong><span id="suggestedEmailTxt"></span></strong>?</span>
+                        <button type="button" id="btnApplyEmailSuggestion" style="margin-left: 8px; padding: 3px 8px; font-size: 0.78rem; background: #0284c7; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Corregir</button>
+                    </div>
+                    <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Ej: Gmail, Hotmail, Outlook o correo institucional escolar.</small>
                 </div>
                 <div class="form-group">
                     <label>Rol de Usuario *</label>
@@ -173,7 +297,7 @@ $users = $stmt->fetchAll();
                         <?php endif; ?>
                     </label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="password" name="password" id="formUserPwd" class="form-control" style="padding-right: 42px;" value="<?php echo htmlspecialchars($edit_user['plain_password'] ?? (!$edit_user ? '123456' : '')); ?>" <?php echo !$edit_user ? 'required' : ''; ?> placeholder="Ingresa la contraseña">
+                        <input type="password" name="password" id="formUserPwd" class="form-control" style="padding-right: 42px;" value="<?php echo htmlspecialchars($edit_user['plain_password'] ?? (!$edit_user ? '123456' : '')); ?>" <?php echo !$edit_user ? 'required' : ''; ?> minlength="6" maxlength="30" placeholder="Ingresa la contraseña">
                         <button type="button" class="btn-pwd-eye" style="position: absolute; right: 8px; z-index: 2;" onclick="toggleInputType('formUserPwd', this)" title="Mostrar / Ocultar contraseña">
                             <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -181,6 +305,7 @@ $users = $stmt->fetchAll();
                             </svg>
                         </button>
                     </div>
+                    <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Entre 6 y 30 caracteres.</small>
                 </div>
             </div>
             
@@ -297,6 +422,148 @@ function toggleInputType(inputId, btn) {
         `;
     }
 }
+
+// Diccionario de errores tipográficos en proveedores comunes de correo
+const emailTypos = {
+    // Typos de Gmail
+    'gma.com': 'gmail.com',
+    'gmai.com': 'gmail.com',
+    'gamil.com': 'gmail.com',
+    'gmial.com': 'gmail.com',
+    'gmaill.com': 'gmail.com',
+    'gmal.com': 'gmail.com',
+    'gmeil.com': 'gmail.com',
+    'gemail.com': 'gmail.com',
+    'gmail.con': 'gmail.com',
+    'gmail.co': 'gmail.com',
+    'gmai.co': 'gmail.com',
+    'gmil.com': 'gmail.com',
+    'gma.co': 'gmail.com',
+    'gimail.com': 'gmail.com',
+
+    // Typos de Hotmail
+    'hotm.com': 'hotmail.com',
+    'hotmai.com': 'hotmail.com',
+    'hotmal.com': 'hotmail.com',
+    'hotmaill.com': 'hotmail.com',
+    'hotmial.com': 'hotmail.com',
+    'hotmeil.com': 'hotmail.com',
+    'hotmail.con': 'hotmail.com',
+    'hotmail.co': 'hotmail.com',
+    'jotmail.com': 'hotmail.com',
+    'jotm.com': 'hotmail.com',
+    'hormail.com': 'hotmail.com',
+
+    // Typos de Outlook
+    'outlok.com': 'outlook.com',
+    'outloo.com': 'outlook.com',
+    'outlock.com': 'outlook.com',
+    'outluk.com': 'outlook.com',
+    'outlook.con': 'outlook.com',
+    'ootlook.com': 'outlook.com',
+    'outloock.com': 'outlook.com',
+
+    // Typos de Yahoo
+    'yaho.com': 'yahoo.com',
+    'yahooo.com': 'yahoo.com',
+    'yahu.com': 'yahoo.com',
+    'yahoo.con': 'yahoo.com',
+    'yaho.com.ar': 'yahoo.com.ar',
+    'yahooo.com.ar': 'yahoo.com.ar'
+};
+
+// Validación interactiva y estricta en el formulario
+document.addEventListener('DOMContentLoaded', function() {
+    const formUser = document.getElementById('formUser');
+    const emailInput = document.getElementById('userEmail');
+    const suggestionBox = document.getElementById('emailSuggestionBox');
+    const suggestedTxt = document.getElementById('suggestedEmailTxt');
+    const btnApply = document.getElementById('btnApplyEmailSuggestion');
+
+    function checkEmailTypo() {
+        if (!emailInput || !suggestionBox) return;
+        const val = emailInput.value.trim().toLowerCase();
+        if (val.includes('@')) {
+            const parts = val.split('@');
+            const userPart = parts[0];
+            const domainPart = parts[1] || '';
+            if (emailTypos[domainPart]) {
+                const suggested = userPart + '@' + emailTypos[domainPart];
+                suggestedTxt.textContent = suggested;
+                suggestionBox.style.display = 'flex';
+                return { hasTypo: true, suggested: suggested, domain: domainPart };
+            }
+        }
+        suggestionBox.style.display = 'none';
+        return { hasTypo: false };
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', checkEmailTypo);
+        emailInput.addEventListener('blur', checkEmailTypo);
+    }
+
+    if (btnApply) {
+        btnApply.addEventListener('click', function() {
+            if (suggestedTxt && emailInput) {
+                emailInput.value = suggestedTxt.textContent;
+                suggestionBox.style.display = 'none';
+                emailInput.focus();
+            }
+        });
+    }
+
+    if (formUser) {
+        formUser.addEventListener('submit', function(e) {
+            const nombreInput = document.getElementById('userNombre');
+            const pwdInput = document.getElementById('formUserPwd');
+
+            if (nombreInput) {
+                const nomVal = nombreInput.value.trim();
+                const nombreRegex = /^[\p{L}\s\.\'-]{3,60}$/u;
+                if (!nombreRegex.test(nomVal)) {
+                    e.preventDefault();
+                    alert('El nombre solo debe contener letras y espacios (entre 3 y 60 caracteres). No se permiten números ni caracteres especiales como @, #, $, etc.');
+                    nombreInput.focus();
+                    return false;
+                }
+            }
+
+            if (emailInput) {
+                const emailVal = emailInput.value.trim().toLowerCase();
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/;
+                
+                if (emailVal.length < 6 || emailVal.length > 80 || !emailRegex.test(emailVal)) {
+                    e.preventDefault();
+                    alert('Ingrese un correo electrónico válido con dominio completo (ej: usuario@gmail.com, máx. 80 caracteres).');
+                    emailInput.focus();
+                    return false;
+                }
+
+                // Verificar si contiene un typo de dominio detectado
+                const typoCheck = checkEmailTypo();
+                if (typoCheck && typoCheck.hasTypo) {
+                    e.preventDefault();
+                    alert('El correo electrónico ingresado ("' + emailVal + '") contiene un dominio no válido ("@' + typoCheck.domain + '").\n\n¿Quisiste escribir "' + typoCheck.suggested + '"? Por favor corrígelo antes de continuar.');
+                    emailInput.focus();
+                    return false;
+                }
+            }
+
+            if (pwdInput) {
+                const pwdVal = pwdInput.value.trim();
+                if (pwdInput.required || pwdVal !== '') {
+                    if (pwdVal.length < 6 || pwdVal.length > 30) {
+                        e.preventDefault();
+                        alert('La contraseña debe tener entre 6 y 30 caracteres.');
+                        pwdInput.focus();
+                        return false;
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

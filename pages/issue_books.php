@@ -335,9 +335,9 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
         <form method="POST" id="formIssueBook">
             <!-- Buscador predictivo de libros -->
             <div class="form-group" style="position: relative; margin-bottom: 12px;">
-                <label><strong>Buscar y Agregar Libro (Título, Autor o Nº Inv.) *</strong></label>
-                <input type="text" id="bookSearchInput" class="form-control" placeholder="Escribe el nombre del libro o inventario para agregar..." autocomplete="off">
-                <div id="bookSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; max-height:220px; overflow-y:auto; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;"></div>
+                <label><strong>Buscar y Agregar Libro (Título, Autor, Categoría o Nº Inv.) *</strong></label>
+                <input type="text" id="bookSearchInput" class="form-control" placeholder="Buscar por título, autor, categoría o Nº de inventario..." autocomplete="off">
+                <div id="bookSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; max-height:260px; overflow-y:auto; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;"></div>
             </div>
 
             <!-- Lista interactiva de libros seleccionados -->
@@ -734,25 +734,49 @@ document.addEventListener('DOMContentLoaded', function() {
                             data.forEach(book => {
                                 const div = document.createElement('div');
                                 div.style.padding = '10px 14px';
-                                div.style.cursor = 'pointer';
                                 div.style.borderBottom = '1px solid #eee';
                                 
-                                const copiasDisp = parseInt(book.copias_disponibles, 10) || 1;
-                                const autorTxt = book.autor ? ` — ${escapeHtml(book.autor)}` : '';
-                                const copiasBadge = copiasDisp > 1 
-                                    ? `<span style="float:right; background:#e0f2fe; color:#0284c7; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">${copiasDisp} disponibles</span>` 
-                                    : `<span style="float:right; background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:12px; font-size:0.78rem;">1 disponible</span>`;
+                                const copiasDisp = parseInt(book.copias_disponibles, 10) || 0;
+                                const isDisponible = (book.estado === 'Disponible');
+                                const autorTxt = book.autor ? ` — <span style="color:#475569;">${escapeHtml(book.autor)}</span>` : '';
+                                const catTxt = book.categoria ? `<span style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:4px; font-size:0.75rem; margin-left:6px;">${escapeHtml(book.categoria)}</span>` : '';
+                                
+                                let badgeHtml = '';
+                                if (isDisponible) {
+                                    if (copiasDisp > 1) {
+                                        badgeHtml = `<span style="float:right; background:#e0f2fe; color:#0284c7; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">${copiasDisp} disponibles</span>`;
+                                    } else {
+                                        badgeHtml = `<span style="float:right; background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">Disponible</span>`;
+                                    }
+                                    div.style.cursor = 'pointer';
+                                    div.addEventListener('mouseover', () => div.style.background = '#f8fafc');
+                                    div.addEventListener('mouseout', () => div.style.background = 'white');
+                                } else {
+                                    const estadoTxt = book.estado || 'No disponible';
+                                    badgeHtml = `<span style="float:right; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">No disponible (${escapeHtml(estadoTxt)})</span>`;
+                                    div.style.background = '#fff5f5';
+                                    div.style.cursor = 'not-allowed';
+                                }
 
                                 div.innerHTML = `
-                                    ${copiasBadge}
-                                    <strong>${escapeHtml(book.titulo)}</strong>${autorTxt}<br>
-                                    <small style="color:#64748b;">Nº Inv: ${escapeHtml(book.isbn || 'S/N')}</small>
+                                    ${badgeHtml}
+                                    <div>
+                                        <strong style="color:${isDisponible ? '#1e293b' : '#991b1b'};">${escapeHtml(book.titulo)}</strong>
+                                        ${catTxt}
+                                        ${autorTxt}
+                                    </div>
+                                    <div style="font-size:0.82rem; margin-top:3px; color:#64748b;">
+                                        Nº Inv: <strong style="color:${isDisponible ? '#0284c7' : '#991b1b'};">${escapeHtml(book.isbn || 'S/N')}</strong>
+                                        <span style="margin-left: 8px; color: #94a3b8;">ID: #${escapeHtml(book.id)}</span>
+                                    </div>
                                 `;
                                 
-                                div.addEventListener('mouseover', () => div.style.background = '#f8fafc');
-                                div.addEventListener('mouseout', () => div.style.background = 'white');
-                                
                                 div.addEventListener('click', () => {
+                                    if (!isDisponible) {
+                                        alert(`El ejemplar "${book.titulo}" (Nº Inv: ${book.isbn || 'S/N'}) no se puede prestar porque su estado actual es "${book.estado}".\n\nSi el libro se encuentra físicamente en la biblioteca, cambie su estado a "Disponible" desde "Gestión de Libros".`);
+                                        return;
+                                    }
+
                                     if (selectedBooks[book.id]) {
                                         // Si ya está, sumar 1 copia si no supera el stock
                                         if (selectedBooks[book.id].cantidad < copiasDisp) {
@@ -777,7 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                             bookSearchResults.style.display = 'block';
                         } else {
-                            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros disponibles con ese criterio.</div>';
+                            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros por título, autor, categoría o número de inventario.</div>';
                             bookSearchResults.style.display = 'block';
                         }
                     })

@@ -1,7 +1,9 @@
 <?php
 /**
  * search_books_json.php
- * Endpoint para búsqueda de libros disponibles en formato JSON (autocompletado)
+ * Endpoint para búsqueda predictiva de libros en formato JSON para el módulo de préstamos.
+ * Permite buscar por Título, Autor, Categoría y Número de Inventario / ID.
+ * Devuelve ejemplares disponibles y no disponibles para retroalimentación transparente.
  */
 require_once __DIR__ . '/../config.php';
 if (session_status() === PHP_SESSION_NONE) {
@@ -20,17 +22,24 @@ if (strlen($q) < 2) {
     exit;
 }
 
-// Búsqueda de libros disponibles por título, inventario o autor (incluyendo conteo de ejemplares disponibles del mismo título)
+$search_param = "%$q%";
+
+// Búsqueda en libros: Título, ISBN / Nº Inventario, Autor y Categoría
 $stmt = $pdo->prepare("
-    SELECT b.id, b.titulo, b.isbn, a.name as autor,
+    SELECT b.id, b.titulo, b.isbn, b.estado, a.name as autor, c.name as categoria,
            (SELECT COUNT(*) FROM books b2 WHERE b2.titulo = b.titulo AND b2.estado = 'Disponible') as copias_disponibles
     FROM books b 
     LEFT JOIN authors a ON b.author_id = a.id 
-    WHERE b.estado = 'Disponible' AND (b.titulo LIKE ? OR b.isbn LIKE ? OR a.name LIKE ?) 
-    ORDER BY b.titulo ASC LIMIT 25
+    LEFT JOIN categories c ON b.category_id = c.id 
+    WHERE (b.titulo LIKE ? OR b.isbn LIKE ? OR a.name LIKE ? OR c.name LIKE ? OR CAST(b.id AS CHAR) = ?)
+    ORDER BY 
+        CASE WHEN b.estado = 'Disponible' THEN 0 ELSE 1 END ASC,
+        b.titulo ASC,
+        b.id ASC 
+    LIMIT 40
 ");
-$stmt->execute(["%$q%", "%$q%", "%$q%"]);
+$stmt->execute([$search_param, $search_param, $search_param, $search_param, $q]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 echo json_encode($books);

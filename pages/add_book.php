@@ -63,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "El Título del libro es obligatorio.";
         } elseif (!$author_id && $author_name === '') {
             $error = "El Autor es obligatorio. Busca o escribe uno.";
+        } elseif (!empty($fecha_publicacion)) {
+            $hoy = date('Y-m-d');
+            if ($fecha_publicacion > $hoy) {
+                $error = "La fecha de publicación no puede ser una fecha futura (solo se permite hoy o fechas pasadas).";
+            }
         }
     }
 
@@ -304,7 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="form-group">
             <label>Fecha de Publicación</label>
-            <input type="date" name="fecha_publicacion" class="form-control" value="<?php echo htmlspecialchars($_POST['fecha_publicacion'] ?? ''); ?>">
+            <input type="date" name="fecha_publicacion" id="fechaPublicacion" class="form-control" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($_POST['fecha_publicacion'] ?? ''); ?>">
+            <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Solo se permiten fechas pasadas o la fecha de hoy.</small>
         </div>
 
         <!-- Buscador en tiempo real: Categoría -->
@@ -664,6 +670,25 @@ if (uploadArea && imageInput) {
         reader.readAsDataURL(file);
     }
 }
+
+// Validación de fecha futura en el envío del formulario
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector('form');
+    var fechaInput = document.getElementById('fechaPublicacion');
+    if (form && fechaInput) {
+        form.addEventListener('submit', function(e) {
+            if (fechaInput.value) {
+                var today = new Date().toISOString().split('T')[0];
+                if (fechaInput.value > today) {
+                    e.preventDefault();
+                    alert('La fecha de publicación no puede ser una fecha futura. Ingrese la fecha de hoy o una fecha pasada.');
+                    fechaInput.focus();
+                    return false;
+                }
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
