@@ -37,39 +37,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rol = $_POST['rol'] ?? 'Lector';
         $raw_pass = trim($_POST['password'] ?? '');
 
-        if ($nombre !== '' && $email !== '') {
-            try {
-                if ($user_id > 0) {
-                    // Modo Edición
-                    if ($raw_pass !== '') {
-                        $hash_pass = password_hash($raw_pass, PASSWORD_DEFAULT);
-                        $stmt = $pdo->prepare("UPDATE users SET nombre = ?, email = ?, rol = ?, password = ?, plain_password = ? WHERE id = ?");
-                        $stmt->execute([$nombre, $email, $rol, $hash_pass, $raw_pass, $user_id]);
-                    } else {
-                        $stmt = $pdo->prepare("UPDATE users SET nombre = ?, email = ?, rol = ? WHERE id = ?");
-                        $stmt->execute([$nombre, $email, $rol, $user_id]);
-                    }
-                    $_SESSION['success_msg'] = "Usuario actualizado exitosamente.";
-                } else {
-                    // Modo Alta
-                    if ($raw_pass === '') {
-                        $raw_pass = '123456'; // Contraseña provisional por defecto
-                    }
-                    $hash_pass = password_hash($raw_pass, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare("INSERT INTO users (nombre, email, rol, password, plain_password) VALUES (?, ?, ?, ?, ?)");
-                    $stmt->execute([$nombre, $email, $rol, $hash_pass, $raw_pass]);
-                    $_SESSION['success_msg'] = "Usuario creado exitosamente.";
-                }
-                header('Location: users.php');
-                exit;
-            } catch (Exception $e) {
-                $_SESSION['error_msg'] = "El correo '$email' ya está registrado o hubo un error: " . $e->getMessage();
-            }
-        } else {
+        if ($nombre === '' || $email === '') {
             $_SESSION['error_msg'] = "El nombre y el correo electrónico son obligatorios.";
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
         }
-        header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
-        exit;
+
+        // Validación estricta de correo electrónico (debe incluir dominio y TLD válido, ej: @gmail.com)
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+            $_SESSION['error_msg'] = "El correo electrónico '$email' no es válido. Debe incluir un dominio completo (ejemplo: usuario@gmail.com).";
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
+        }
+
+        try {
+            if ($user_id > 0) {
+                // Modo Edición
+                if ($raw_pass !== '') {
+                    $hash_pass = password_hash($raw_pass, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("UPDATE users SET nombre = ?, email = ?, rol = ?, password = ?, plain_password = ? WHERE id = ?");
+                    $stmt->execute([$nombre, $email, $rol, $hash_pass, $raw_pass, $user_id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE users SET nombre = ?, email = ?, rol = ? WHERE id = ?");
+                    $stmt->execute([$nombre, $email, $rol, $user_id]);
+                }
+                $_SESSION['success_msg'] = "Usuario actualizado exitosamente.";
+            } else {
+                // Modo Alta
+                if ($raw_pass === '') {
+                    $raw_pass = '123456'; // Contraseña provisional por defecto
+                }
+                $hash_pass = password_hash($raw_pass, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO users (nombre, email, rol, password, plain_password) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$nombre, $email, $rol, $hash_pass, $raw_pass]);
+                $_SESSION['success_msg'] = "Usuario creado exitosamente.";
+            }
+            header('Location: users.php');
+            exit;
+        } catch (Exception $e) {
+            $_SESSION['error_msg'] = "El correo '$email' ya está registrado o hubo un error: " . $e->getMessage();
+            header('Location: users.php' . ($user_id > 0 ? "?edit=$user_id" : ''));
+            exit;
+        }
     }
 }
 
@@ -146,7 +155,7 @@ $users = $stmt->fetchAll();
                 </div>
                 <div class="form-group">
                     <label>Correo Electrónico *</label>
-                    <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($edit_user['email'] ?? ''); ?>" required placeholder="correo@ejemplo.com">
+                    <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($edit_user['email'] ?? ''); ?>" required placeholder="correo@ejemplo.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido con dominio completo (ej: usuario@gmail.com)">
                 </div>
                 <div class="form-group">
                     <label>Rol de Usuario *</label>

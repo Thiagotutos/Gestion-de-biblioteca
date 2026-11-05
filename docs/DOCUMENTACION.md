@@ -150,10 +150,10 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
 1. Ingresa a [`pages/users.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/users.php) (requiere rol de `Administrador`).
 2. En el formulario de alta, ingresa:
    - Nombre de usuario.
-   - Correo electrónico (debe ser único).
+   - Correo electrónico (debe ser único y contener dominio y extensión TLD válidos, ej: `usuario@gmail.com`).
    - Contraseña inicial (será encriptada mediante `password_hash`).
    - Rol: `Administrador`, `Bibliotecario` o `Lector`.
-3. Haz clic en **"Registrar Usuario"**.
+3. Haz clic en **"Crear Usuario"**.
 
 ### Guía 2.5: ¿Cómo exportar y restaurar copias de seguridad de la base de datos?
 1. Inicia sesión como **Administrador** y dirígete a la pestaña **Respaldo BD** en la barra lateral ([`pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php)).
@@ -163,8 +163,8 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
 3. **Para Restaurar (Importar Backup)**:
    - En la tarjeta **Restaurar Base de Datos**, presiona **"Seleccionar Archivo SQL"** y elige tu archivo `.sql`.
    - Marca la casilla de confirmación: *"Entiendo los riesgos y confirmo que deseo restaurar la base de datos"*.
-   - Presiona **"📤 Restaurar Base de Datos"** y confirma en el cuadro de diálogo.
-   - El sistema ejecutará las sentencias SQL deshabilitando temporalmente las claves foráneas para preservar integridad y notificará la cantidad de sentencias ejecutadas.
+   - Presiona **"📤 Importar Datos / Restaurar Base de Datos"** y confirma en el cuadro de diálogo.
+   - El sistema ejecutará las sentencias SQL mediante lectura eficiente por flujo (streaming de bajo consumo en RAM < 4MB), deshabilitando temporalmente las claves foráneas para preservar integridad y notificando la cantidad de sentencias ejecutadas. Soporta respaldos de gran volumen (hasta 256MB).
 
 ### Guía 2.6: ¿Cómo editar Autores, Editoriales y Categorías sin eliminarlos?
 1. Dirígete a la sección correspondiente en el menú lateral:
@@ -183,7 +183,7 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
    ```bash
    sudo bash deploy/deploy_nginx.sh
    ```
-   - El script instalará Nginx, MySQL, PHP-FPM, configurará la base de datos, los permisos y el firewall.
+   - El script instalará Nginx, MySQL, PHP-FPM, configurará la base de datos, los permisos, el firewall y ajustará automáticamente los límites de Nginx (`client_max_body_size 256M`, `fastcgi_buffers`) y PHP-FPM (`upload_max_filesize = 256M`, `post_max_size = 256M`, `max_input_vars = 10000`) para soportar importaciones de respaldos SQL pesados sin errores de parámetros ni desconexiones.
 2. **Obtener la dirección IP local del servidor en la red WiFi**:
    - En el servidor ejecuta: `hostname -I | awk '{print $1}'` (ejemplo de IP obtenida: `192.168.1.150`).
 3. **Acceder desde cualquier computadora, notebook o tablet en la misma red WiFi**:

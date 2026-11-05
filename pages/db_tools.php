@@ -21,6 +21,15 @@ $stats = [
     'categorias' => (int)$pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn(),
 ];
 
+// Detección de carga que supera post_max_size del servidor (cuando $_POST llega vacío pero se enviaron datos)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && (int)$_SERVER['CONTENT_LENGTH'] > 0) {
+    $maxPost = ini_get('post_max_size');
+    $contentLenMB = round((int)$_SERVER['CONTENT_LENGTH'] / 1048576, 2);
+    $_SESSION['error_msg'] = "El archivo enviado ({$contentLenMB} MB) excede el tamaño máximo permitido por el servidor web o PHP (post_max_size actual: {$maxPost}). Configure 'client_max_body_size 256M;' en Nginx y 'post_max_size = 256M' en php.ini.";
+    header('Location: db_tools.php');
+    exit;
+}
+
 // Procesar importación de archivo .sql
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     $confirm = $_POST['confirm_restore'] ?? '0';
@@ -32,7 +41,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     }
 
     if (!isset($_FILES['sql_file']) || $_FILES['sql_file']['error'] !== UPLOAD_ERR_OK) {
-        $_SESSION['error_msg'] = "Por favor, seleccione un archivo SQL válido para importar.";
+        $errorCode = $_FILES['sql_file']['error'] ?? UPLOAD_ERR_NO_FILE;
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+                $maxUpload = ini_get('upload_max_filesize');
+                $_SESSION['error_msg'] = "El archivo supera el tamaño máximo permitido por PHP (upload_max_filesize actual: {$maxUpload}). Aumente este valor en php.ini a 256M.";
+                break;
+            case UPLOAD_ERR_FORM_SIZE:
+                $_SESSION['error_msg'] = "El archivo supera el tamaño máximo permitido por el formulario web.";
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $_SESSION['error_msg'] = "La carga del archivo se interrumpió y solo se subió parcialmente.";
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $_SESSION['error_msg'] = "Por favor, seleccione un archivo SQL (.sql) antes de hacer clic en Importar.";
+                break;
+            default:
+                $_SESSION['error_msg'] = "Error al recibir el archivo en el servidor (Código de error PHP: $errorCode).";
+                break;
+        }
         header('Location: db_tools.php');
         exit;
     }
@@ -47,81 +74,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         exit;
     }
 
-    // Configurar tiempo y memoria
-    set_time_limit(300);
-    ini_set('memory_limit', '256M');
+    // Configurar tiempo y memoria generosos para archivos de gran volumen
+    @set_time_limit(600);
+    @ini_set('memory_limit', '512M');
 
-    $sqlContent = file_get_contents($fileTmp);
-    if ($sqlContent === false || strlen(trim($sqlContent)) === 0) {
-        $_SESSION['error_msg'] = "El archivo SQL seleccionado está vacío o no se pudo leer.";
+    $handle = fopen($fileTmp, 'r');
+    if (!$handle) {
+        $_SESSION['error_msg'] = "No se pudo abrir el archivo SQL para su lectura en el servidor.";
         header('Location: db_tools.php');
         exit;
     }
 
+    $executed = 0;
     try {
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
-        // Permitir fechas parciales (ej: '1967' en columna DATE → '1967-00-00')
-        // y valores fuera de rango sin error fatal
         $pdo->exec("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO,ALLOW_INVALID_DATES';");
+        try {
+            $pdo->exec("SET SESSION max_allowed_packet = 134217728;"); // 128 MB para paquetes grandes
+        } catch (Exception $ePkt) {
+            // Ignorar si el usuario no tiene privilegios de alterar max_allowed_packet por sesión
+        }
 
-        // Parser seguro de sentencias SQL respetando comillas y comentarios
-        $queries = [];
         $currentQuery = '';
         $inString = false;
         $stringChar = '';
-        $length = strlen($sqlContent);
+        $inMultilineComment = false;
 
-        for ($i = 0; $i < $length; $i++) {
-            $char = $sqlContent[$i];
+        // Parser seguro y eficiente por flujo (streaming): memoria constante < 4MB
+        while (($line = fgets($handle)) !== false) {
+            $trimmedLine = trim($line);
 
-            // Detectar comentarios de una línea (-- o #) fuera de cadenas de texto
-            if (!$inString && ($char === '#' || ($char === '-' && $i + 1 < $length && $sqlContent[$i + 1] === '-'))) {
-                // Saltar hasta el fin de línea
-                while ($i < $length && $sqlContent[$i] !== "\n") {
-                    $i++;
+            // Optimización: descartar rápidamente líneas de comentarios si no estamos en string
+            if (!$inString && !$inMultilineComment) {
+                if ($trimmedLine === '' || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '#')) {
+                    continue;
                 }
-                continue;
             }
 
-            // Detectar inicio/fin de cadenas de texto
-            if (($char === "'" || $char === '"' || $char === '`') && ($i === 0 || $sqlContent[$i - 1] !== '\\')) {
+            $len = strlen($line);
+            for ($i = 0; $i < $len; $i++) {
+                $char = $line[$i];
+
+                // Comentarios multilínea /* ... */ fuera de strings
                 if (!$inString) {
-                    $inString = true;
-                    $stringChar = $char;
-                } elseif ($stringChar === $char) {
-                    $inString = false;
+                    if (!$inMultilineComment && $char === '/' && $i + 1 < $len && $line[$i + 1] === '*') {
+                        // Preservar directivas condicionales ejecutables de MySQL (ej: /*!40101 ... */)
+                        if ($i + 2 < $len && $line[$i + 2] === '!') {
+                            $i += 2;
+                            while ($i < $len && ctype_digit($line[$i])) {
+                                $i++;
+                            }
+                            continue;
+                        }
+                        $inMultilineComment = true;
+                        $i++;
+                        continue;
+                    } elseif ($inMultilineComment && $char === '*' && $i + 1 < $len && $line[$i + 1] === '/') {
+                        $inMultilineComment = false;
+                        $i++;
+                        continue;
+                    }
                 }
-            }
 
-            if ($char === ';' && !$inString) {
-                $trimmed = trim($currentQuery);
-                if (!empty($trimmed)) {
-                    $queries[] = $trimmed;
+                if ($inMultilineComment) {
+                    continue;
                 }
-                $currentQuery = '';
-            } else {
-                $currentQuery .= $char;
+
+                // Comentarios de fin de línea (-- o #) fuera de strings
+                if (!$inString) {
+                    if ($char === '#' || ($char === '-' && $i + 1 < $len && $line[$i + 1] === '-')) {
+                        break;
+                    }
+                }
+
+                // Detección de cadenas de texto y delimitadores protegidos
+                if (($char === "'" || $char === '"' || $char === '`') && ($i === 0 || $line[$i - 1] !== '\\')) {
+                    if (!$inString) {
+                        $inString = true;
+                        $stringChar = $char;
+                    } elseif ($stringChar === $char) {
+                        if ($char === "'" && $i + 1 < $len && $line[$i + 1] === "'") {
+                            $currentQuery .= $char;
+                            $i++;
+                            $currentQuery .= $line[$i];
+                            continue;
+                        }
+                        $inString = false;
+                    }
+                }
+
+                // Fin de sentencia SQL fuera de cadenas
+                if ($char === ';' && !$inString) {
+                    $trimmed = trim($currentQuery);
+                    if ($trimmed !== '') {
+                        $pdo->exec($trimmed);
+                        $executed++;
+                    }
+                    $currentQuery = '';
+                } else {
+                    $currentQuery .= $char;
+                }
             }
         }
 
         $trimmed = trim($currentQuery);
-        if (!empty($trimmed)) {
-            $queries[] = $trimmed;
-        }
-
-        $executed = 0;
-        foreach ($queries as $query) {
-            $pdo->exec($query);
+        if ($trimmed !== '') {
+            $pdo->exec($trimmed);
             $executed++;
         }
 
+        fclose($handle);
+
         $pdo->exec("SET SESSION sql_mode = '';");
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
-        $_SESSION['success_msg'] = "Base de datos restaurada correctamente. Se ejecutaron " . number_format($executed) . " sentencias SQL con éxito.";
+        $_SESSION['success_msg'] = "Base de datos restaurada correctamente. Se procesaron y ejecutaron " . number_format($executed) . " sentencias SQL con éxito.";
     } catch (Exception $e) {
+        if (is_resource($handle)) {
+            fclose($handle);
+        }
         $pdo->exec("SET SESSION sql_mode = '';");
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
-        $_SESSION['error_msg'] = "Error durante la restauración: " . $e->getMessage();
+        $_SESSION['error_msg'] = "Error durante la restauración (sentencia #" . ($executed + 1) . "): " . $e->getMessage();
     }
 
     header('Location: db_tools.php');

@@ -258,7 +258,11 @@ server {
     root /var/www/Gestion-de-biblioteca;
     index index.php index.html;
 
-    client_max_body_size 64M; # Permite subida de respaldos SQL grandes
+    client_max_body_size 256M; # Permite subida de respaldos SQL grandes
+    client_body_buffer_size 256k;
+    client_body_timeout 600s;
+    client_header_timeout 600s;
+    large_client_header_buffers 4 32k;
 
     location / {
         try_files $uri $uri/ /index.php?$args;
@@ -270,6 +274,13 @@ server {
         fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
+
+        fastcgi_read_timeout 600;
+        fastcgi_send_timeout 600;
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 256 16k;
+        fastcgi_busy_buffers_size 256k;
+        fastcgi_temp_file_write_size 256k;
     }
 
     # Bloqueo de acceso directo a archivos sensibles

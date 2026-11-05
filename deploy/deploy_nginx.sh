@@ -44,6 +44,28 @@ if [ -z "$PHP_SOCK" ]; then
 fi
 echo "ℹ️ Socket PHP detectado: $PHP_SOCK"
 
+echo "⚙️ Configurando límites de PHP-FPM y MySQL para importaciones SQL pesadas..."
+for INI in $(find /etc/php -name "php.ini" 2>/dev/null); do
+    if [ -f "$INI" ]; then
+        echo "   → Optimizando directivas en $INI"
+        sed -i 's/^upload_max_filesize.*/upload_max_filesize = 256M/' "$INI"
+        sed -i 's/^post_max_size.*/post_max_size = 256M/' "$INI"
+        sed -i 's/^memory_limit.*/memory_limit = 512M/' "$INI"
+        sed -i 's/^max_execution_time.*/max_execution_time = 600/' "$INI"
+        sed -i 's/^max_input_time.*/max_input_time = 600/' "$INI"
+        sed -i 's/^max_input_vars.*/max_input_vars = 10000/' "$INI"
+    fi
+done
+
+# Configurar límites en MySQL
+if [ -d "/etc/mysql/conf.d" ]; then
+    cat > /etc/mysql/conf.d/biblioteca_limits.cnf <<EOF
+[mysqld]
+max_allowed_packet = 128M
+innodb_lock_wait_timeout = 300
+EOF
+fi
+
 echo ""
 echo "🗄️ [2/6] Configurando base de datos MySQL..."
 $MYSQL_CMD <<EOF
@@ -121,6 +143,7 @@ rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 nginx -t
 systemctl restart nginx
 systemctl restart $(basename "$PHP_SOCK" .sock | sed 's/-fpm//')-fpm 2>/dev/null || systemctl restart php*-fpm 2>/dev/null || true
+systemctl restart mysql 2>/dev/null || true
 
 echo ""
 echo "🛡️ [6/6] Abriendo puerto 80 en Firewall (UFW)..."

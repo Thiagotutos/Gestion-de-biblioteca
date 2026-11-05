@@ -30,7 +30,7 @@ unset($_SESSION['login_error']);
         <form action="auth.php" method="POST">
             <div class="form-group">
                 <label for="email">Correo Electrónico</label>
-                <input type="email" name="email" id="email" class="form-control" required placeholder="admin@biblioteca.com">
+                <input type="email" name="email" id="email" class="form-control" required placeholder="admin@biblioteca.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido con dominio completo (ej: admin@biblioteca.com)">
             </div>
             <div class="form-group">
                 <label for="password">Contraseña</label>
