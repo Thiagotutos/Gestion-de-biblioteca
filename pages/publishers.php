@@ -93,27 +93,26 @@ if ($search !== '') $url_params['search'] = $search;
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
     <div class="form-container form-pane">
         <?php if ($edit_item): ?>
-            <h3>Editar Editorial</h3>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Modificando ID #<?php echo $edit_item['id']; ?></p>
-            <form method="POST">
+            <h3 style="margin-bottom: 8px;">Editar Editorial <small style="font-size: 0.85rem; color: #666; font-weight: normal;">(Modificando ID #<?php echo $edit_item['id']; ?>)</small></h3>
+            <form method="POST" class="form-inline-action">
                 <input type="hidden" name="id" value="<?php echo $edit_item['id']; ?>">
                 <div class="form-group">
                     <label>Nombre de la Editorial</label>
                     <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($edit_item['name']); ?>" required autofocus>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" name="edit_item" class="btn btn-primary" style="flex: 1;">Actualizar</button>
-                    <a href="publishers.php" class="btn" style="background: #888; text-decoration: none; text-align: center;">Cancelar</a>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" name="edit_item" class="btn btn-primary" style="padding: 10px 20px;">Actualizar</button>
+                    <a href="publishers.php" class="btn" style="background: #888; text-decoration: none; padding: 10px 16px;">Cancelar</a>
                 </div>
             </form>
         <?php else: ?>
-            <h3>Agregar Editorial</h3><br>
-            <form method="POST">
+            <h3 style="margin-bottom: 8px;">Agregar Editorial</h3>
+            <form method="POST" class="form-inline-action">
                 <div class="form-group">
                     <label>Nombre de la Editorial</label>
                     <input type="text" name="name" class="form-control" required placeholder="Ej: Sudamericana">
                 </div>
-                <button type="submit" name="add_item" class="btn btn-primary">Guardar</button>
+                <button type="submit" name="add_item" class="btn btn-primary" style="padding: 10px 20px;">Guardar Editorial</button>
             </form>
         <?php endif; ?>
     </div>

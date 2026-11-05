@@ -20,13 +20,14 @@ if (strlen($q) < 2) {
     exit;
 }
 
-// Búsqueda de libros disponibles por título, inventario o autor
+// Búsqueda de libros disponibles por título, inventario o autor (incluyendo conteo de ejemplares disponibles del mismo título)
 $stmt = $pdo->prepare("
-    SELECT b.id, b.titulo, b.isbn, a.name as autor 
+    SELECT b.id, b.titulo, b.isbn, a.name as autor,
+           (SELECT COUNT(*) FROM books b2 WHERE b2.titulo = b.titulo AND b2.estado = 'Disponible') as copias_disponibles
     FROM books b 
     LEFT JOIN authors a ON b.author_id = a.id 
     WHERE b.estado = 'Disponible' AND (b.titulo LIKE ? OR b.isbn LIKE ? OR a.name LIKE ?) 
-    ORDER BY b.titulo ASC LIMIT 20
+    ORDER BY b.titulo ASC LIMIT 25
 ");
 $stmt->execute(["%$q%", "%$q%", "%$q%"]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);

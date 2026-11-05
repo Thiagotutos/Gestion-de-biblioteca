@@ -21,15 +21,16 @@ CREATE TABLE `users` (
   `rol` enum('Administrador','Bibliotecario','Lector') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Lector',
   `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `plain_password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Cuentas de demostración iniciales (Contraseña: admin123)
-INSERT INTO `users` (`id`, `nombre`, `rol`, `email`, `password`) VALUES
-(1, 'Administrador del Sistema', 'Administrador', 'admin@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u'),
-(2, 'Bibliotecario Principal', 'Bibliotecario', 'bibliotecario@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u'),
-(3, 'Lector de Prueba', 'Lector', 'lector@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u');
+INSERT INTO `users` (`id`, `nombre`, `rol`, `email`, `password`, `plain_password`) VALUES
+(1, 'Administrador del Sistema', 'Administrador', 'admin@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u', 'admin123'),
+(2, 'Bibliotecario Principal', 'Bibliotecario', 'bibliotecario@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u', 'admin123'),
+(3, 'Lector de Prueba', 'Lector', 'lector@biblioteca.com', '$2y$10$RToxd6U4jpqhnOajhzErdugUAM8WHXAJtWhAEGJaV6qv.VtYzcX/u', 'admin123');
 
 -- -------------------------------------------------------------
 -- 2. Tabla: `racks` (Estantes y Ubicaciones Físicas)
@@ -124,6 +125,7 @@ CREATE TABLE `transactions` (
   `lector_documento` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `turno` enum('Mañana','Tarde','Noche') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `curso` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `responsable` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `librarian_id` int NOT NULL,
   `accion` enum('Prestamo','Devolucion','Ingreso') COLLATE utf8mb4_unicode_ci NOT NULL,
   `fecha_hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

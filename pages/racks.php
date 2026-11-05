@@ -58,11 +58,13 @@ if ($search !== '') $url_params['search'] = $search;
 <div class="split-layout">
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
     <div class="form-container form-pane">
-        <h3>Agregar Estante</h3><br>
-        <form method="POST">
-            <div class="form-group"><label>Nombre del Estante</label>
-            <input type="text" name="name" class="form-control" required></div>
-            <button type="submit" name="add_item" class="btn btn-primary" style="width: 100%;">Guardar</button>
+        <h3 style="margin-bottom: 8px;">Agregar Estante / Ubicación</h3>
+        <form method="POST" class="form-inline-action">
+            <div class="form-group">
+                <label>Nombre del Estante</label>
+                <input type="text" name="name" class="form-control" required placeholder="Ej: Estante A1, Pasillo 3...">
+            </div>
+            <button type="submit" name="add_item" class="btn btn-primary" style="padding: 10px 20px;">Guardar</button>
         </form>
     </div>
     <?php endif; ?>

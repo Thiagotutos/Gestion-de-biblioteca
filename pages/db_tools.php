@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="content-header">
-    <h2>Copia de Seguridad y Restauración de Base de Datos</h2>
+    <h2>Importar Datos y Copia de Seguridad</h2>
 </div>
 
 <?php if (isset($_SESSION['success_msg'])): ?>
@@ -201,8 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
             <div style="font-size: 1.8rem;">📤</div>
             <div>
-                <h3 style="margin: 0; color: var(--color-accent);">Restaurar Base de Datos</h3>
-                <small style="color: #666;">Importar archivo SQL existente</small>
+                <h3 style="margin: 0; color: var(--color-accent);">Importar Datos / Restaurar Base de Datos</h3>
+                <small style="color: #666;">Cargar archivo SQL para poblar o actualizar la base de datos</small>
             </div>
         </div>
 
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
             </div>
 
             <button type="submit" name="import_db" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; background-color: var(--color-accent); margin-top: 10px;">
-                📤 Restaurar Base de Datos
+                📤 Importar Datos / Restaurar Base de Datos
             </button>
         </form>
     </div>
