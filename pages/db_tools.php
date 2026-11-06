@@ -231,6 +231,7 @@ $totalStored = count($storedBackups);
         </div>
 
         <form method="POST" enctype="multipart/form-data" id="formImportDb">
+            <input type="hidden" name="import_db" value="1">
             <div class="form-group">
                 <label for="sqlFile">Seleccionar Archivo SQL (.sql)</label>
                 <input type="file" name="sql_file" id="sqlFile" class="form-control" accept=".sql" required style="padding: 8px;">
@@ -275,6 +276,7 @@ $totalStored = count($storedBackups);
                 <?php echo $totalStored; ?> / 10 Copias Almacenadas
             </span>
             <form method="POST" style="margin: 0;" onsubmit="return confirm('¿Desea generar una copia de seguridad en el servidor ahora mismo?');">
+                <input type="hidden" name="create_backup_now" value="1">
                 <button type="submit" name="create_backup_now" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.9rem;">
                      Crear Respaldo Ahora
                 </button>
@@ -325,6 +327,7 @@ $totalStored = count($storedBackups);
                                     </a>
 
                                     <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('¿Está COMPLETAMENTE SEGURO de restaurar la base de datos a esta copia (<?php echo htmlspecialchars($bk['filename']); ?>)? Se sobreescribirán los datos actuales.');">
+                                        <input type="hidden" name="restore_stored" value="1">
                                         <input type="hidden" name="backup_filename" value="<?php echo htmlspecialchars($bk['filename']); ?>">
                                         <input type="hidden" name="confirm_restore_stored" value="1">
                                         <button type="submit" name="restore_stored" class="btn btn-edit" style="width: auto !important; min-width: 0 !important; padding: 4px 10px; font-size: 0.8rem;" title="Restaurar esta versión en la base de datos">
@@ -396,9 +399,11 @@ document.addEventListener('DOMContentLoaded', function() {
             showLoading('Importando y Restaurando Base de Datos...', 'El sistema está cargando el archivo SQL y ejecutando las sentencias en la base de datos. Por favor, espere...');
 
             if (btnSubmitImport) {
-                btnSubmitImport.disabled = true;
                 btnSubmitImport.textContent = 'Importando... Por favor espere';
                 btnSubmitImport.style.opacity = '0.7';
+                setTimeout(function() {
+                    try { btnSubmitImport.disabled = true; } catch (err) {}
+                }, 50);
             }
             return true;
         };
@@ -418,8 +423,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (ok !== false) {
                         showLoading('Restaurando Copia de Seguridad...', 'Se está restaurando la base de datos al punto seleccionado. Por favor, espere...');
-                        btnRestore.disabled = true;
                         btnRestore.textContent = 'Restaurando...';
+                        setTimeout(function() {
+                            try { btnRestore.disabled = true; } catch (err) {}
+                        }, 50);
                     }
                     return ok;
                 };
@@ -435,8 +442,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (ok !== false) {
                         showLoading('Generando Copia de Seguridad...', 'El servidor está generando el volcado SQL completo de la base de datos. Por favor, espere...');
-                        btnCreateNow.disabled = true;
                         btnCreateNow.textContent = 'Generando...';
+                        setTimeout(function() {
+                            try { btnCreateNow.disabled = true; } catch (err) {}
+                        }, 50);
                     }
                     return ok;
                 };
