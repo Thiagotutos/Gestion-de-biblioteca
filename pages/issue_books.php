@@ -344,7 +344,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
             <div id="selectedBooksContainer" style="margin-bottom: 18px;">
                 <div id="selectedBooksList" style="display: flex; flex-direction: column; gap: 8px;">
                     <div id="noBooksSelectedNotice" style="padding: 12px 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-size: 0.88rem;">
-                        🔍 Busca y selecciona uno o más libros arriba para agregarlos a este préstamo.
+                        Busca y selecciona uno o más libros arriba para agregarlos a este préstamo.
                     </div>
                 </div>
             </div>
@@ -374,7 +374,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                 <!-- Campo dinámico Responsable: Aparece automáticamente si lleva más de 1 libro/copia -->
                 <div class="form-group" id="divResponsable" style="display: none; background: #fff8e1; border: 1px solid #ffe082; padding: 10px 14px; border-radius: 6px;">
                     <label style="color: #b78103; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                        <span>⚠️</span> Docente / Adulto Responsable *
+                        Docente / Adulto Responsable *
                     </label>
                     <input type="text" name="responsable" id="inputResponsable" class="form-control" placeholder="Ej: Prof. Mariana Fernández">
                     <small style="color: #795548; font-size: 0.8rem; display: block; margin-top: 4px;">
@@ -396,10 +396,10 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
         <!-- Barra de Pestañas -->
         <div class="tabs-bar">
             <button type="button" class="tab-btn active" id="tabActivosBtn" onclick="switchLoanTab('activos')">
-                <span>📌</span> Préstamos Activos (<?php echo count($prestamos); ?>)
+                Préstamos Activos (<?php echo count($prestamos); ?>)
             </button>
             <button type="button" class="tab-btn" id="tabLogsBtn" onclick="switchLoanTab('logs')">
-                <span>📜</span> Logs / Historial de Movimientos (<?php echo count($logs_movimientos); ?>)
+                Logs / Historial de Movimientos (<?php echo count($logs_movimientos); ?>)
             </button>
         </div>
 
@@ -488,13 +488,13 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                                style="background-color: #0288d1; color: white; padding: 6px 12px; font-size: 0.82rem; margin-right: 5px; display: inline-block; text-decoration: none; border-radius: 4px;" 
                                onclick="return confirm('¿Renovar préstamo por 1 semana más para: <?php echo addslashes($p['lector']); ?>?');"
                                title="Extiende la fecha límite de devolución por 7 días">
-                                ↻ Renovar (+7d)
+                                Renovar (+7d)
                             </a>
                             <a href="issue_books.php?return_book=<?php echo $p['book_id']; ?>" 
                                class="btn" 
                                style="background-color: #2e7d32; color: white; padding: 6px 12px; font-size: 0.82rem; display: inline-block; text-decoration: none; border-radius: 4px;" 
                                onclick="return confirm('¿Confirmar devolución del libro: <?php echo addslashes($p['titulo']); ?>?');">
-                                ✓ Devolver
+                                Devolver
                             </a>
                         </td>
                     </tr>
@@ -570,7 +570,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                         <td style="font-size: 0.82rem; white-space: nowrap;">
                             <?php if ($log['accion'] === 'Devolucion'): ?>
                                 <span style="color: #2e7d32; font-weight: 600;">
-                                    ✓ Entregado: <?php echo !empty($log['fecha_devolucion_real']) ? date('d/m/Y H:i', strtotime($log['fecha_devolucion_real'])) : date('d/m/Y', strtotime($log['fecha_hora'])); ?>
+                                    Entregado: <?php echo !empty($log['fecha_devolucion_real']) ? date('d/m/Y H:i', strtotime($log['fecha_devolucion_real'])) : date('d/m/Y', strtotime($log['fecha_hora'])); ?>
                                 </span>
                             <?php elseif (!empty($log['fecha_devolucion_esperada'])): ?>
                                 <span style="color: #64748b;">
@@ -598,8 +598,8 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
 </div>
 
 <script>
-// Estado de libros seleccionados en la transacción actual
-const selectedBooks = {};
+// Estado de libros seleccionados en la transacción actual (Compatible con navegadores de Windows clásico)
+var selectedBooks = {};
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -612,97 +612,80 @@ function escapeHtml(text) {
 }
 
 function renderSelectedBooks() {
-    const list = document.getElementById('selectedBooksList');
-    const divResponsable = document.getElementById('divResponsable');
-    const inputResponsable = document.getElementById('inputResponsable');
-    const txtCantLibros = document.getElementById('txtCantLibros');
-    const btnTxtCant = document.getElementById('btnTxtCant');
+    var list = document.getElementById('selectedBooksList');
+    var divResponsable = document.getElementById('divResponsable');
+    var inputResponsable = document.getElementById('inputResponsable');
+    var txtCantLibros = document.getElementById('txtCantLibros');
+    var btnTxtCant = document.getElementById('btnTxtCant');
 
     if (!list) return;
 
-    const bookIds = Object.keys(selectedBooks);
+    var bookIds = Object.keys(selectedBooks);
 
     if (bookIds.length === 0) {
-        list.innerHTML = `
-            <div id="noBooksSelectedNotice" style="padding: 12px 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-size: 0.88rem;">
-                🔍 Busca y selecciona uno o más libros arriba para agregarlos a este préstamo.
-            </div>
-        `;
+        list.innerHTML = '<div id="noBooksSelectedNotice" style="padding: 12px 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-size: 0.88rem;">' +
+            'Busca y selecciona uno o más libros arriba para agregarlos a este préstamo.' +
+        '</div>';
         if (divResponsable) divResponsable.style.display = 'none';
-        if (inputResponsable) {
-            inputResponsable.required = false;
-        }
+        if (inputResponsable) inputResponsable.required = false;
         if (btnTxtCant) btnTxtCant.textContent = '0 libros';
         return;
     }
 
-    let html = '';
-    let totalEjemplares = 0;
+    var html = '';
+    var totalEjemplares = 0;
 
-    bookIds.forEach(id => {
-        const b = selectedBooks[id];
-        const cant = parseInt(b.cantidad, 10) || 1;
+    for (var i = 0; i < bookIds.length; i++) {
+        var id = bookIds[i];
+        var b = selectedBooks[id];
+        var cant = parseInt(b.cantidad, 10) || 1;
         totalEjemplares += cant;
-        const maxDisp = b.maxCopias || 1;
-        const autorTxt = b.autor ? `<span style="color:#64748b; font-size:0.82rem; display:block;">${escapeHtml(b.autor)}</span>` : '';
-        const sigTxt = b.signatura ? `<span style="margin-left:8px; background:#eff6ff; color:#1d4ed8; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600;">🔖 ${escapeHtml(b.signatura)}</span>` : '';
-        const isbnTxt = b.isbn_editorial ? `<span style="margin-left:8px; font-size:0.75rem; color:#475569; font-family:monospace;">ISBN: ${escapeHtml(b.isbn_editorial)}</span>` : '';
+        var maxDisp = b.maxCopias || 1;
+        var autorTxt = b.autor ? '<span style="color:#64748b; font-size:0.82rem; display:block;">' + escapeHtml(b.autor) + '</span>' : '';
+        var sigTxt = b.signatura ? '<span style="margin-left:8px; background:#eff6ff; color:#1d4ed8; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600;">Sig: ' + escapeHtml(b.signatura) + '</span>' : '';
+        var isbnTxt = b.isbn_editorial ? '<span style="margin-left:8px; font-size:0.75rem; color:#475569; font-family:monospace;">ISBN: ' + escapeHtml(b.isbn_editorial) + '</span>' : '';
 
-        html += `
-            <div class="selected-book-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid #cbd5e1; border-left:4px solid var(--color-primary); border-radius:6px; padding:10px 14px; flex-wrap:wrap;">
-                <div style="flex:1; min-width:200px;">
-                    <strong style="color:#1e293b; font-size:0.95rem;">${escapeHtml(b.titulo)}</strong>
-                    ${autorTxt}
-                    <div style="margin-top:2px;">
-                        <span style="font-size:0.78rem; color:#0288d1; font-weight:600;">Nº Inv: ${escapeHtml(b.isbn || 'S/N')}</span>
-                        ${sigTxt}
-                        ${isbnTxt}
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">
-                    <label style="font-size:0.84rem; color:#475569; margin:0; font-weight:600; white-space:nowrap;">Copias:</label>
-                    <input type="number" 
-                           name="selected_books[${b.id}][cantidad]" 
-                           value="${cant}" 
-                           min="1" 
-                           max="${maxDisp}" 
-                           class="form-control" 
-                           style="width:72px; padding:4px 8px; font-weight:bold; text-align:center;" 
-                           onchange="updateBookCopies(${b.id}, this.value)"
-                           oninput="updateBookCopies(${b.id}, this.value)">
-                    <span style="font-size:0.8rem; color:#64748b; white-space:nowrap;">(de ${maxDisp} disp.)</span>
-                    <button type="button" class="btn" style="background:#fee2e2; color:#dc2626; padding:5px 10px; font-size:0.85rem; border:none; border-radius:4px; cursor:pointer; margin-left:6px;" onclick="removeSelectedBook(${b.id})" title="Quitar este libro">✕</button>
-                </div>
-            </div>
-        `;
-    });
+        html += '<div class="selected-book-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid #cbd5e1; border-left:4px solid var(--color-primary); border-radius:6px; padding:10px 14px; flex-wrap:wrap; margin-bottom:8px;">' +
+            '<div style="flex:1; min-width:200px;">' +
+                '<strong style="color:#1e293b; font-size:0.95rem;">' + escapeHtml(b.titulo) + '</strong>' +
+                autorTxt +
+                '<div style="margin-top:2px;">' +
+                    '<span style="font-size:0.78rem; color:#0288d1; font-weight:600;">Nº Inv: ' + escapeHtml(b.isbn || 'S/N') + '</span>' +
+                    sigTxt +
+                    isbnTxt +
+                '</div>' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">' +
+                '<label style="font-size:0.84rem; color:#475569; margin:0; font-weight:600; white-space:nowrap;">Copias:</label>' +
+                '<input type="number" name="selected_books[' + b.id + '][cantidad]" value="' + cant + '" min="1" max="' + maxDisp + '" class="form-control" style="width:72px; padding:4px 8px; font-weight:bold; text-align:center;" onchange="updateBookCopies(' + b.id + ', this.value)" oninput="updateBookCopies(' + b.id + ', this.value)">' +
+                '<span style="font-size:0.8rem; color:#64748b; white-space:nowrap;">(de ' + maxDisp + ' disp.)</span>' +
+                '<button type="button" class="btn" style="background:#fee2e2; color:#dc2626; padding:5px 10px; font-size:0.85rem; border:none; border-radius:4px; cursor:pointer; margin-left:6px;" onclick="removeSelectedBook(' + b.id + ')" title="Quitar este libro">Quitar</button>' +
+            '</div>' +
+        '</div>';
+    }
 
     list.innerHTML = html;
 
     // Actualizar indicador en el botón
     if (btnTxtCant) {
-        btnTxtCant.textContent = totalEjemplares === 1 ? '1 libro' : `${totalEjemplares} libros`;
+        btnTxtCant.textContent = totalEjemplares === 1 ? '1 libro' : (totalEjemplares + ' libros');
     }
 
     // Regla de Negocio: Si lleva más de 1 libro/copia, aparece el campo Responsable y se vuelve obligatorio
     if (totalEjemplares > 1) {
         if (divResponsable) divResponsable.style.display = 'block';
-        if (inputResponsable) {
-            inputResponsable.required = true;
-        }
+        if (inputResponsable) inputResponsable.required = true;
         if (txtCantLibros) txtCantLibros.textContent = totalEjemplares;
     } else {
         if (divResponsable) divResponsable.style.display = 'none';
-        if (inputResponsable) {
-            inputResponsable.required = false;
-        }
+        if (inputResponsable) inputResponsable.required = false;
     }
 }
 
 function updateBookCopies(id, val) {
     if (selectedBooks[id]) {
-        let n = parseInt(val, 10) || 1;
-        const max = selectedBooks[id].maxCopias || 1;
+        var n = parseInt(val, 10) || 1;
+        var max = selectedBooks[id].maxCopias || 1;
         if (n < 1) n = 1;
         if (n > max) n = max;
         selectedBooks[id].cantidad = n;
@@ -716,112 +699,138 @@ function removeSelectedBook(id) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const bookSearchInput = document.getElementById('bookSearchInput');
-    const bookSearchResults = document.getElementById('bookSearchResults');
-    const formIssue = document.getElementById('formIssueBook');
-    let searchTimeout;
+    var bookSearchInput = document.getElementById('bookSearchInput');
+    var bookSearchResults = document.getElementById('bookSearchResults');
+    var formIssue = document.getElementById('formIssueBook');
+    var searchTimeout = null;
+    var searchXHR = null;
+
+    function renderSearchResults(data) {
+        bookSearchResults.innerHTML = '';
+        if (data && data.length > 0) {
+            for (var i = 0; i < data.length; i++) {
+                (function(book) {
+                    var div = document.createElement('div');
+                    div.style.padding = '10px 14px';
+                    div.style.borderBottom = '1px solid #eee';
+
+                    var copiasDisp = parseInt(book.copias_disponibles, 10) || 0;
+                    var isDisponible = (book.estado === 'Disponible');
+                    var autorTxt = book.autor ? ' — <span style="color:#475569;">' + escapeHtml(book.autor) + '</span>' : '';
+                    var catTxt = book.categoria ? '<span style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:4px; font-size:0.75rem; margin-left:6px;" title="Materia">' + escapeHtml(book.categoria) + '</span>' : '';
+                    var sigTxt = book.signatura ? '<span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600; margin-left:6px;">Sig: ' + escapeHtml(book.signatura) + '</span>' : '';
+                    var isbnTxt = book.isbn_editorial ? '<span style="background:#f8fafc; color:#334155; border:1px solid #e2e8f0; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-family:monospace; margin-left:6px;">ISBN: ' + escapeHtml(book.isbn_editorial) + '</span>' : '';
+
+                    var badgeHtml = '';
+                    if (isDisponible) {
+                        if (copiasDisp > 1) {
+                            badgeHtml = '<span style="float:right; background:#e0f2fe; color:#0284c7; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">' + copiasDisp + ' disponibles</span>';
+                        } else {
+                            badgeHtml = '<span style="float:right; background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">Disponible</span>';
+                        }
+                        div.style.cursor = 'pointer';
+                        div.onmouseover = function() { div.style.background = '#f8fafc'; };
+                        div.onmouseout = function() { div.style.background = 'white'; };
+                    } else {
+                        var estadoTxt = book.estado || 'No disponible';
+                        badgeHtml = '<span style="float:right; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">No disponible (' + escapeHtml(estadoTxt) + ')</span>';
+                        div.style.background = '#fff5f5';
+                        div.style.cursor = 'not-allowed';
+                    }
+
+                    div.innerHTML = badgeHtml +
+                        '<div>' +
+                            '<strong style="color:' + (isDisponible ? '#1e293b' : '#991b1b') + ';">' + escapeHtml(book.titulo) + '</strong>' +
+                            catTxt +
+                            autorTxt +
+                        '</div>' +
+                        '<div style="font-size:0.82rem; margin-top:3px; color:#64748b; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                            '<span>Nº Inv: <strong style="color:' + (isDisponible ? '#0284c7' : '#991b1b') + ';">' + escapeHtml(book.isbn || 'S/N') + '</strong></span>' +
+                            sigTxt +
+                            isbnTxt +
+                            '<span style="color: #94a3b8;">ID: #' + escapeHtml(book.id) + '</span>' +
+                        '</div>';
+
+                    div.onclick = function() {
+                        if (!isDisponible) {
+                            alert('El ejemplar "' + book.titulo + '" (Nº Inv: ' + (book.isbn || 'S/N') + ') no se puede prestar porque su estado actual es "' + book.estado + '".\n\nSi el libro se encuentra físicamente en la biblioteca, cambie su estado a "Disponible" desde "Gestión de Libros".');
+                            return;
+                        }
+
+                        if (selectedBooks[book.id]) {
+                            if (selectedBooks[book.id].cantidad < copiasDisp) {
+                                selectedBooks[book.id].cantidad++;
+                            }
+                        } else {
+                            selectedBooks[book.id] = {
+                                id: book.id,
+                                titulo: book.titulo,
+                                autor: book.autor,
+                                isbn: book.isbn,
+                                signatura: book.signatura,
+                                isbn_editorial: book.isbn_editorial,
+                                maxCopias: copiasDisp,
+                                cantidad: 1
+                            };
+                        }
+                        bookSearchInput.value = '';
+                        bookSearchResults.style.display = 'none';
+                        renderSelectedBooks();
+                    };
+
+                    bookSearchResults.appendChild(div);
+                })(data[i]);
+            }
+            bookSearchResults.style.display = 'block';
+        } else {
+            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros por título, autor, materia, signatura, ISBN o número de inventario.</div>';
+            bookSearchResults.style.display = 'block';
+        }
+    }
+
+    function doSearch() {
+        if (!bookSearchInput) return;
+        var query = bookSearchInput.value.replace(/^\s+|\s+$/g, '');
+
+        if (query.length < 2) {
+            bookSearchResults.style.display = 'none';
+            return;
+        }
+
+        if (searchXHR) {
+            searchXHR.abort();
+        }
+
+        if (window.XMLHttpRequest) {
+            searchXHR = new XMLHttpRequest();
+        } else {
+            searchXHR = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+
+        var url = '../api/search_books_json.php?q=' + encodeURIComponent(query);
+        searchXHR.open('GET', url, true);
+        searchXHR.onreadystatechange = function() {
+            if (searchXHR.readyState === 4) {
+                if (searchXHR.status === 200) {
+                    try {
+                        var data = JSON.parse(searchXHR.responseText);
+                        renderSearchResults(data);
+                    } catch (e) {
+                        console.error('Error parseando JSON de libros:', e);
+                    }
+                }
+            }
+        };
+        searchXHR.send();
+    }
 
     if (bookSearchInput) {
-        bookSearchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            const query = this.value.trim();
-            
-            if (query.length < 2) {
-                bookSearchResults.style.display = 'none';
-                return;
-            }
-            
-            searchTimeout = setTimeout(() => {
-                fetch(`../api/search_books_json.php?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        bookSearchResults.innerHTML = '';
-                        if (data.length > 0) {
-                            data.forEach(book => {
-                                const div = document.createElement('div');
-                                div.style.padding = '10px 14px';
-                                div.style.borderBottom = '1px solid #eee';
-                                
-                                const copiasDisp = parseInt(book.copias_disponibles, 10) || 0;
-                                const isDisponible = (book.estado === 'Disponible');
-                                const autorTxt = book.autor ? ` — <span style="color:#475569;">${escapeHtml(book.autor)}</span>` : '';
-                                const catTxt = book.categoria ? `<span style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:4px; font-size:0.75rem; margin-left:6px;" title="Materia">${escapeHtml(book.categoria)}</span>` : '';
-                                const sigTxt = book.signatura ? `<span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600; margin-left:6px;">🔖 ${escapeHtml(book.signatura)}</span>` : '';
-                                const isbnTxt = book.isbn_editorial ? `<span style="background:#f8fafc; color:#334155; border:1px solid #e2e8f0; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-family:monospace; margin-left:6px;">ISBN: ${escapeHtml(book.isbn_editorial)}</span>` : '';
-                                
-                                let badgeHtml = '';
-                                if (isDisponible) {
-                                    if (copiasDisp > 1) {
-                                        badgeHtml = `<span style="float:right; background:#e0f2fe; color:#0284c7; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">${copiasDisp} disponibles</span>`;
-                                    } else {
-                                        badgeHtml = `<span style="float:right; background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">Disponible</span>`;
-                                    }
-                                    div.style.cursor = 'pointer';
-                                    div.addEventListener('mouseover', () => div.style.background = '#f8fafc');
-                                    div.addEventListener('mouseout', () => div.style.background = 'white');
-                                } else {
-                                    const estadoTxt = book.estado || 'No disponible';
-                                    badgeHtml = `<span style="float:right; background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:600;">No disponible (${escapeHtml(estadoTxt)})</span>`;
-                                    div.style.background = '#fff5f5';
-                                    div.style.cursor = 'not-allowed';
-                                }
-
-                                div.innerHTML = `
-                                    ${badgeHtml}
-                                    <div>
-                                        <strong style="color:${isDisponible ? '#1e293b' : '#991b1b'};">${escapeHtml(book.titulo)}</strong>
-                                        ${catTxt}
-                                        ${autorTxt}
-                                    </div>
-                                    <div style="font-size:0.82rem; margin-top:3px; color:#64748b; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                        <span>Nº Inv: <strong style="color:${isDisponible ? '#0284c7' : '#991b1b'};">${escapeHtml(book.isbn || 'S/N')}</strong></span>
-                                        ${sigTxt}
-                                        ${isbnTxt}
-                                        <span style="color: #94a3b8;">ID: #${escapeHtml(book.id)}</span>
-                                    </div>
-                                `;
-                                
-                                div.addEventListener('click', () => {
-                                    if (!isDisponible) {
-                                        alert(`El ejemplar "${book.titulo}" (Nº Inv: ${book.isbn || 'S/N'}) no se puede prestar porque su estado actual es "${book.estado}".\n\nSi el libro se encuentra físicamente en la biblioteca, cambie su estado a "Disponible" desde "Gestión de Libros".`);
-                                        return;
-                                    }
-
-                                    if (selectedBooks[book.id]) {
-                                        // Si ya está, sumar 1 copia si no supera el stock
-                                        if (selectedBooks[book.id].cantidad < copiasDisp) {
-                                            selectedBooks[book.id].cantidad++;
-                                        }
-                                    } else {
-                                        selectedBooks[book.id] = {
-                                            id: book.id,
-                                            titulo: book.titulo,
-                                            autor: book.autor,
-                                            isbn: book.isbn,
-                                            signatura: book.signatura,
-                                            isbn_editorial: book.isbn_editorial,
-                                            maxCopias: copiasDisp,
-                                            cantidad: 1
-                                        };
-                                    }
-                                    bookSearchInput.value = '';
-                                    bookSearchResults.style.display = 'none';
-                                    renderSelectedBooks();
-                                });
-                                
-                                bookSearchResults.appendChild(div);
-                            });
-                            bookSearchResults.style.display = 'block';
-                        } else {
-                            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros por título, autor, materia, signatura, ISBN o número de inventario.</div>';
-                            bookSearchResults.style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error buscando libros:', error);
-                    });
-            }, 250);
-        });
+        var onInputSearch = function() {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(doSearch, 200);
+        };
+        bookSearchInput.oninput = onInputSearch;
+        bookSearchInput.onkeyup = onInputSearch;
 
         // Ocultar resultados al hacer click fuera
         document.addEventListener('click', function(e) {
@@ -833,54 +842,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Validación al enviar el formulario
     if (formIssue) {
-        formIssue.addEventListener('submit', function(e) {
-            const bookIds = Object.keys(selectedBooks);
+        formIssue.onsubmit = function(e) {
+            var bookIds = Object.keys(selectedBooks);
             if (bookIds.length === 0) {
-                e.preventDefault();
+                if (e && e.preventDefault) e.preventDefault();
                 alert('Debes buscar y seleccionar al menos un libro para registrar el préstamo.');
                 if (bookSearchInput) bookSearchInput.focus();
                 return false;
             }
 
-            let total = 0;
-            bookIds.forEach(id => total += (parseInt(selectedBooks[id].cantidad, 10) || 1));
+            var total = 0;
+            for (var k = 0; k < bookIds.length; k++) {
+                total += (parseInt(selectedBooks[bookIds[k]].cantidad, 10) || 1);
+            }
 
-            const inputResponsable = document.getElementById('inputResponsable');
-            if (total > 1 && inputResponsable && !inputResponsable.value.trim()) {
-                e.preventDefault();
+            var inputResponsable = document.getElementById('inputResponsable');
+            if (total > 1 && inputResponsable && !inputResponsable.value.replace(/^\s+|\s+$/g, '')) {
+                if (e && e.preventDefault) e.preventDefault();
                 alert('Para préstamos de más de 1 libro/copia, es obligatorio indicar el Docente o Adulto Responsable.');
                 inputResponsable.focus();
                 return false;
             }
-        });
+            return true;
+        };
     }
 
-    // Comprobar si se solicitó la pestaña de logs por parámetro URL (?tab=logs)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('tab') === 'logs') {
+    // Comprobar si se solicitó la pestaña de logs por parámetro URL (?tab=logs) sin depender de URLSearchParams
+    if (window.location.search && window.location.search.indexOf('tab=logs') !== -1) {
         switchLoanTab('logs');
     }
 });
 
 // Función para alternar entre Préstamos Activos y Logs / Historial
 function switchLoanTab(tabName) {
-    const paneActivos = document.getElementById('paneActivos');
-    const paneLogs = document.getElementById('paneLogs');
-    const tabActivosBtn = document.getElementById('tabActivosBtn');
-    const tabLogsBtn = document.getElementById('tabLogsBtn');
+    var paneActivos = document.getElementById('paneActivos');
+    var paneLogs = document.getElementById('paneLogs');
+    var tabActivosBtn = document.getElementById('tabActivosBtn');
+    var tabLogsBtn = document.getElementById('tabLogsBtn');
 
     if (!paneActivos || !paneLogs) return;
 
     if (tabName === 'logs') {
         paneActivos.style.display = 'none';
         paneLogs.style.display = 'block';
-        if (tabActivosBtn) tabActivosBtn.classList.remove('active');
-        if (tabLogsBtn) tabLogsBtn.classList.add('active');
+        if (tabActivosBtn) tabActivosBtn.className = tabActivosBtn.className.replace(/\bactive\b/g, '').replace(/^\s+|\s+$/g, '');
+        if (tabLogsBtn && tabLogsBtn.className.indexOf('active') === -1) {
+            tabLogsBtn.className += ' active';
+        }
     } else {
         paneActivos.style.display = 'block';
         paneLogs.style.display = 'none';
-        if (tabActivosBtn) tabActivosBtn.classList.add('active');
-        if (tabLogsBtn) tabLogsBtn.classList.remove('active');
+        if (tabLogsBtn) tabLogsBtn.className = tabLogsBtn.className.replace(/\bactive\b/g, '').replace(/^\s+|\s+$/g, '');
+        if (tabActivosBtn && tabActivosBtn.className.indexOf('active') === -1) {
+            tabActivosBtn.className += ' active';
+        }
     }
 }
 </script>

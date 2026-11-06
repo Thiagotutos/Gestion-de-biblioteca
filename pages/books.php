@@ -129,14 +129,14 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 <div class="search-filters-bar">
     <form method="GET" class="search-form" id="searchForm">
         <select name="search_by" id="searchBySelect" class="filter-select" title="Criterio de búsqueda">
-            <option value="all" <?php echo $search_by === 'all' ? 'selected' : ''; ?>>🔍 Todos los campos</option>
-            <option value="title" <?php echo $search_by === 'title' ? 'selected' : ''; ?>>📖 Título</option>
-            <option value="author" <?php echo $search_by === 'author' ? 'selected' : ''; ?>>✍️ Autor</option>
-            <option value="isbn" <?php echo $search_by === 'isbn' ? 'selected' : ''; ?>>🏷️ Nº Inventario</option>
-            <option value="signatura" <?php echo $search_by === 'signatura' ? 'selected' : ''; ?>>🔖 Signatura Topográfica</option>
-            <option value="isbn_editorial" <?php echo $search_by === 'isbn_editorial' ? 'selected' : ''; ?>>🔢 ISBN (Editorial)</option>
-            <option value="category" <?php echo $search_by === 'category' ? 'selected' : ''; ?>>📂 Materia</option>
-            <option value="publisher" <?php echo $search_by === 'publisher' ? 'selected' : ''; ?>>🏢 Editorial</option>
+            <option value="all" <?php echo $search_by === 'all' ? 'selected' : ''; ?>>Todos los campos</option>
+            <option value="title" <?php echo $search_by === 'title' ? 'selected' : ''; ?>>Título</option>
+            <option value="author" <?php echo $search_by === 'author' ? 'selected' : ''; ?>>Autor</option>
+            <option value="isbn" <?php echo $search_by === 'isbn' ? 'selected' : ''; ?>>Nº Inventario</option>
+            <option value="signatura" <?php echo $search_by === 'signatura' ? 'selected' : ''; ?>>Signatura Topográfica</option>
+            <option value="isbn_editorial" <?php echo $search_by === 'isbn_editorial' ? 'selected' : ''; ?>>ISBN (Editorial)</option>
+            <option value="category" <?php echo $search_by === 'category' ? 'selected' : ''; ?>>Materia</option>
+            <option value="publisher" <?php echo $search_by === 'publisher' ? 'selected' : ''; ?>>Editorial</option>
         </select>
         <div class="search-input-wrapper">
             <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
@@ -210,10 +210,10 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
                             <div style="font-size: 0.78rem; color: #777;">Pub: <?php echo date('d/m/Y', strtotime($libro['fecha_publicacion'])); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($libro['notas'])): ?>
-                            <div style="font-size: 0.75rem; color: #888; font-style: italic;" title="<?php echo htmlspecialchars($libro['notas']); ?>">📝 <?php echo htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')); ?></div>
+                            <div style="font-size: 0.75rem; color: #888; font-style: italic;" title="<?php echo htmlspecialchars($libro['notas']); ?>">Nota: <?php echo htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($libro['observacion'])): ?>
-                            <div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="<?php echo htmlspecialchars($libro['observacion']); ?>">🏷️ <?php echo htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')); ?></div>
+                            <div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="<?php echo htmlspecialchars($libro['observacion']); ?>">Obs: <?php echo htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')); ?></div>
                         <?php endif; ?>
                     </div>
                 </div>

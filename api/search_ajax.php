@@ -162,10 +162,10 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
             echo '<div style="font-size: 0.78rem; color: #777;">Pub: ' . date('d/m/Y', strtotime($libro['fecha_publicacion'])) . '</div>';
         }
         if (!empty($libro['notas'])) {
-            echo '<div style="font-size: 0.75rem; color: #888; font-style: italic;" title="' . htmlspecialchars($libro['notas']) . '">📝 ' . htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')) . '</div>';
+            echo '<div style="font-size: 0.75rem; color: #888; font-style: italic;" title="' . htmlspecialchars($libro['notas']) . '">Nota: ' . htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')) . '</div>';
         }
         if (!empty($libro['observacion'])) {
-            echo '<div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="' . htmlspecialchars($libro['observacion']) . '">🏷️ ' . htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')) . '</div>';
+            echo '<div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="' . htmlspecialchars($libro['observacion']) . '">Obs: ' . htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')) . '</div>';
         }
         echo '</div></div></td>';
         echo '<td><strong>' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '</strong></td>';

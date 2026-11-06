@@ -276,7 +276,7 @@ $users = $stmt->fetchAll();
                     <label>Correo Electrónico *</label>
                     <input type="email" name="email" id="userEmail" class="form-control" value="<?php echo htmlspecialchars($edit_user['email'] ?? ''); ?>" required placeholder="correo@ejemplo.com" maxlength="80" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$" title="Ingrese un correo electrónico válido con dominio completo (ej: usuario@gmail.com, máx. 80 caracteres)">
                     <div id="emailSuggestionBox" style="display: none; margin-top: 5px; padding: 6px 10px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; font-size: 0.82rem; color: #b78103; align-items: center; justify-content: space-between;">
-                        <span>⚠️ ¿Quisiste escribir <strong><span id="suggestedEmailTxt"></span></strong>?</span>
+                        <span>¿Quisiste escribir <strong><span id="suggestedEmailTxt"></span></strong>?</span>
                         <button type="button" id="btnApplyEmailSuggestion" style="margin-left: 8px; padding: 3px 8px; font-size: 0.78rem; background: #0284c7; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Corregir</button>
                     </div>
                     <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Ej: Gmail, Hotmail, Outlook o correo institucional escolar.</small>

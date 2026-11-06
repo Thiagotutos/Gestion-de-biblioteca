@@ -252,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div id="authorSearchResults" class="autocomplete-dropdown" style="display: none;"></div>
             <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">
-                🔍 Escribe el nombre del autor. Si no existe en la biblioteca, se creará automáticamente al guardar.
+                Escribe el nombre del autor. Si no existe en la biblioteca, se creará automáticamente al guardar.
             </small>
         </div>
 
@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span id="cantidadHelp" style="font-size: 0.88rem; color: #555;">1 libro individual.</span>
             </div>
             <small style="display: block; margin-top: 8px; color: #0288d1; font-size: 0.8rem;">
-                💡 Si ingresas 2 o más ejemplares, el sistema asignará correlativamente los números de inventario (ej: <code><?php echo htmlspecialchars($siguiente_isbn); ?></code>, <code><?php echo htmlspecialchars(str_pad((string)((int)$siguiente_isbn + 1), strlen($siguiente_isbn), '0', STR_PAD_LEFT)); ?></code>...).
+                Si ingresas 2 o más ejemplares, el sistema asignará correlativamente los números de inventario (ej: <code><?php echo htmlspecialchars($siguiente_isbn); ?></code>, <code><?php echo htmlspecialchars(str_pad((string)((int)$siguiente_isbn + 1), strlen($siguiente_isbn), '0', STR_PAD_LEFT)); ?></code>...).
             </small>
         </div>
 
@@ -280,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <input type="text" name="isbn" id="isbnInput" class="form-control" value="<?php echo htmlspecialchars($_POST['isbn'] ?? $siguiente_isbn); ?>" placeholder="Ej: <?php echo htmlspecialchars($siguiente_isbn); ?>" style="font-weight: bold; max-width: 260px; min-width: 150px; flex: 1;" required>
                 <button type="button" id="btnSugerirIsbn" class="btn" style="background: #e2e8f0; color: #334155; font-size: 0.8rem; padding: 8px 12px; white-space: nowrap;" title="Restablecer al siguiente disponible">
-                    ↻ Siguiente: <?php echo htmlspecialchars($siguiente_isbn); ?>
+                    Siguiente: <?php echo htmlspecialchars($siguiente_isbn); ?>
                 </button>
             </div>
             <div id="isbnFeedback" style="display: none; margin-top: 6px; font-size: 0.85rem; padding: 6px 10px; border-radius: 4px;"></div>
@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div id="publisherSearchResults" class="autocomplete-dropdown" style="display: none;"></div>
             <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">
-                🔍 Escribe la editorial. Si no existe, se creará automáticamente.
+                Escribe la editorial. Si no existe, se creará automáticamente.
             </small>
         </div>
 
@@ -344,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div id="categorySearchResults" class="autocomplete-dropdown" style="display: none;"></div>
             <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">
-                🔍 Escribe la materia (ej: Literatura, Geografía, Historia, Matemática). Si no existe, se creará automáticamente.
+                Escribe la materia (ej: Literatura, Geografía, Historia, Matemática). Si no existe, se creará automáticamente.
             </small>
         </div>
 
@@ -413,11 +413,11 @@ function setupAutocomplete(opts) {
         if (type === 'existing') {
             badge.style.background = '#2e7d32';
             badge.style.color = '#fff';
-            badge.textContent = '✓ ' + text;
+            badge.textContent = text;
         } else {
             badge.style.background = '#0288d1';
             badge.style.color = '#fff';
-            badge.textContent = '✨ ' + text;
+            badge.textContent = text;
         }
     }
 
@@ -470,7 +470,7 @@ function setupAutocomplete(opts) {
         if (q.length > 0 && !exactMatch) {
             var createDiv = document.createElement('div');
             createDiv.className = 'autocomplete-create-item';
-            createDiv.innerHTML = '➕ Crear nuevo/a ' + opts.singular + ': "<strong>' + escapeHtml(q) + '</strong>"';
+            createDiv.innerHTML = '+ Crear nuevo/a ' + opts.singular + ': "<strong>' + escapeHtml(q) + '</strong>"';
             createDiv.addEventListener('click', function() {
                 hidden.value = '';
                 dropdown.style.display = 'none';
@@ -588,19 +588,19 @@ setupAutocomplete({
                     if (res.exists) {
                         badge.style.background = '#d32f2f';
                         badge.style.color = '#fff';
-                        badge.textContent = '✗ Ya en uso';
+                        badge.textContent = 'Ya en uso';
                         feedback.style.background = '#fee2e2';
                         feedback.style.color = '#991b1b';
                         feedback.style.border = '1px solid #f87171';
-                        feedback.innerHTML = '⚠️ <strong>Inventario Duplicado:</strong> Este número ya está asignado al libro <em>"' + escapeHtml(res.book.titulo) + '"</em> (ID: #' + res.book.id + '). Elige otro número o presiona el botón para usar el siguiente disponible.';
+                        feedback.innerHTML = '<strong>Inventario Duplicado:</strong> Este número ya está asignado al libro <em>"' + escapeHtml(res.book.titulo) + '"</em> (ID: #' + res.book.id + '). Elige otro número o presiona el botón para usar el siguiente disponible.';
                     } else {
                         badge.style.background = '#2e7d32';
                         badge.style.color = '#fff';
-                        badge.textContent = '✓ Disponible';
+                        badge.textContent = 'Disponible';
                         feedback.style.background = '#ecfdf5';
                         feedback.style.color = '#065f46';
                         feedback.style.border = '1px solid #a7f3d0';
-                        feedback.innerHTML = '✓ <strong>Disponible:</strong> Este número de inventario no está en uso y es válido.';
+                        feedback.innerHTML = '<strong>Disponible:</strong> Este número de inventario no está en uso y es válido.';
                     }
                 } catch (e) {
                     console.error('Error parseando respuesta check_isbn:', e);

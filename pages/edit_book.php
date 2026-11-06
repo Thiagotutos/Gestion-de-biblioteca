@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Autor *</span>
                 <span id="authorStatusBadge" class="status-badge" style="<?php echo $curr_author ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
-                    <?php echo $curr_author ? '✓ Seleccionado' : ''; ?>
+                    <?php echo $curr_author ? 'Seleccionado' : ''; ?>
                 </span>
             </label>
             <div style="position: relative;">
@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div id="authorSearchResults" class="autocomplete-dropdown" style="display: none;"></div>
             <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">
-                🔍 Escribe el nombre del autor. Si no existe, se creará automáticamente.
+                Escribe el nombre del autor. Si no existe, se creará automáticamente.
             </small>
         </div>
 
@@ -247,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Editorial</span>
                 <span id="publisherStatusBadge" class="status-badge" style="<?php echo $curr_publisher ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
-                    <?php echo $curr_publisher ? '✓ Seleccionado' : ''; ?>
+                    <?php echo $curr_publisher ? 'Seleccionado' : ''; ?>
                 </span>
             </label>
             <div style="position: relative;">
@@ -274,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Materia</span>
                 <span id="categoryStatusBadge" class="status-badge" style="<?php echo $curr_category ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
-                    <?php echo $curr_category ? '✓ Seleccionado' : ''; ?>
+                    <?php echo $curr_category ? 'Seleccionado' : ''; ?>
                 </span>
             </label>
             <div style="position: relative;">
@@ -310,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php if ($libro['imagen']): ?>
             <button type="button" class="btn btn-delete" id="btnEliminarImg" style="margin-top: 8px; font-size: 0.85rem; padding: 5px 12px;">
-                ✕ Eliminar imagen actual
+                Eliminar imagen actual
             </button>
             <?php endif; ?>
         </div>
@@ -359,12 +359,12 @@ function setupAutocomplete(config) {
             badge.style.display = 'inline-block';
             badge.style.background = '#2e7d32';
             badge.style.color = '#fff';
-            badge.textContent = text || '✓ Existente';
+            badge.textContent = text || 'Existente';
         } else if (status === 'new') {
             badge.style.display = 'inline-block';
             badge.style.background = '#0288d1';
             badge.style.color = '#fff';
-            badge.textContent = text || '✚ Se creará nuevo';
+            badge.textContent = text || '+ Se creará nuevo';
         } else {
             badge.style.display = 'none';
         }
@@ -420,7 +420,7 @@ function setupAutocomplete(config) {
                 input.value = item.name;
                 hidden.value = item.id;
                 dropdown.style.display = 'none';
-                updateBadge('found', '✓ Seleccionado');
+                updateBadge('found', 'Seleccionado');
             });
             dropdown.appendChild(div);
         });
@@ -428,7 +428,7 @@ function setupAutocomplete(config) {
         if (!exactMatch && query.length > 0) {
             var createDiv = document.createElement('div');
             createDiv.className = 'autocomplete-create-item';
-            createDiv.innerHTML = '✚ Crear ' + escapeHtml(config.singular) + ': <strong>"' + escapeHtml(query) + '"</strong>';
+            createDiv.innerHTML = '+ Crear ' + escapeHtml(config.singular) + ': <strong>"' + escapeHtml(query) + '"</strong>';
             createDiv.addEventListener('click', function() {
                 hidden.value = '';
                 dropdown.style.display = 'none';

@@ -244,7 +244,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     <!-- TARJETA 1: EXPORTAR BASE DE DATOS -->
     <div class="form-container" style="max-width: 100%;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-            <div style="font-size: 1.8rem;">📥</div>
             <div>
                 <h3 style="margin: 0; color: var(--color-primary);">Exportar Base de Datos</h3>
                 <small style="color: #666;">Descarga de volcado SQL completo</small>
@@ -265,14 +264,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         </div>
 
         <a href="../api/export_db.php" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; font-size: 1.05rem; text-decoration: none;">
-            <span>📥</span> Descargar Copia de Seguridad (.sql)
+            Descargar Copia de Seguridad (.sql)
         </a>
     </div>
 
     <!-- TARJETA 2: IMPORTAR BASE DE DATOS -->
     <div class="form-container" style="max-width: 100%;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-            <div style="font-size: 1.8rem;">📤</div>
             <div>
                 <h3 style="margin: 0; color: var(--color-accent);">Importar Datos / Restaurar Base de Datos</h3>
                 <small style="color: #666;">Cargar archivo SQL para poblar o actualizar la base de datos</small>
@@ -280,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         </div>
 
         <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px 15px; border-radius: 6px; font-size: 0.88rem; margin-bottom: 18px; line-height: 1.5;">
-            ⚠️ <strong>ADVERTENCIA:</strong> Esta acción ejecutará las instrucciones del archivo SQL seleccionado. Podría sobreescribir o modificar tablas existentes. Se recomienda realizar una exportación previa antes de restaurar.
+            <strong>ADVERTENCIA:</strong> Esta acción ejecutará las instrucciones del archivo SQL seleccionado. Podría sobreescribir o modificar tablas existentes. Se recomienda realizar una exportación previa antes de restaurar.
         </div>
 
         <form method="POST" enctype="multipart/form-data" id="formImportDb" onsubmit="return confirm('¿Está COMPLETAMENTE SEGURO de restaurar la base de datos? Se reemplazarán los datos actuales con los del archivo seleccionado.');">
@@ -297,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
             </div>
 
             <button type="submit" name="import_db" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; background-color: var(--color-accent); margin-top: 10px;">
-                📤 Importar Datos / Restaurar Base de Datos
+                Importar Datos / Restaurar Base de Datos
             </button>
         </form>
     </div>

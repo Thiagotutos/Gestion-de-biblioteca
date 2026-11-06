@@ -10,7 +10,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <ul>
                 <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">Dashboard</a></li>
                 <li>
-                    <a href="books.php" class="<?php echo (in_array($current_page, ['books.php', 'add_book.php', 'edit_book.php'])) ? 'active' : ''; ?>">Libros ▾</a>
+                    <a href="books.php" class="<?php echo (in_array($current_page, ['books.php', 'add_book.php', 'edit_book.php'])) ? 'active' : ''; ?>">Libros</a>
                     <ul class="sub-menu">
                         <li><a href="books.php" class="<?php echo ($current_page == 'books.php') ? 'active' : ''; ?>">Gestionar Libros</a></li>
                         <li><a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">Materias</a></li>
