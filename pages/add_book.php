@@ -41,24 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $estado = $_POST['estado'] ?? 'Disponible';
 
     $cantidad = isset($_POST['cantidad']) ? max(1, min(100, (int)$_POST['cantidad'])) : 1;
-
-    // Manejo de imagen
     $imagen = null;
-    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $fileType = $_FILES['imagen']['type'];
-        if (in_array($fileType, $allowed)) {
-            $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
-            $imagen = uniqid('book_') . '.' . $ext;
-            $uploadDir = __DIR__ . '/../uploads/books/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            move_uploaded_file($_FILES['imagen']['tmp_name'], $uploadDir . $imagen);
-        } else {
-            $error = "Formato de imagen no permitido. Use JPG, PNG, GIF o WebP.";
-        }
-    }
 
     if (!isset($error)) {
         if (!$titulo) {
@@ -349,23 +332,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="form-group">
-            <label>Portada del Libro</label>
-            <div class="image-upload-area" id="uploadArea">
-                <input type="file" name="imagen" id="imagenInput" class="image-input" accept="image/jpeg,image/png,image/gif,image/webp">
-                <div class="upload-placeholder" id="uploadPlaceholder">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <path d="M21 15l-5-5L5 21"/>
-                    </svg>
-                    <p>Haz clic o arrastra una imagen aquí</p>
-                    <span>JPG, PNG, GIF o WebP (máx. 5MB)</span>
-                </div>
-                <img id="imagePreview" class="image-preview" style="display:none;" alt="Vista previa">
-            </div>
-        </div>
-
-        <div class="form-group">
             <label>Notas (opcional)</label>
             <textarea name="notas" class="form-control" rows="3" placeholder="Notas internas..."><?php echo htmlspecialchars($_POST['notas'] ?? ''); ?></textarea>
         </div>
@@ -653,41 +619,6 @@ if (inputCantidad && cantidadHelp) {
 }
 
 
-// ============================================================================
-// 4. Subida y Vista Previa de Imagen
-// ============================================================================
-var uploadArea = document.getElementById('uploadArea');
-var imageInput = document.getElementById('imagenInput');
-var imagePreview = document.getElementById('imagePreview');
-var placeholder = document.getElementById('uploadPlaceholder');
-
-if (uploadArea && imageInput) {
-    uploadArea.addEventListener('click', function() { imageInput.click(); });
-    uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); uploadArea.classList.add('drag-over'); });
-    uploadArea.addEventListener('dragleave', function() { uploadArea.classList.remove('drag-over'); });
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        if (e.dataTransfer.files.length) {
-            imageInput.files = e.dataTransfer.files;
-            showPreview(e.dataTransfer.files[0]);
-        }
-    });
-
-    imageInput.addEventListener('change', function(e) {
-        if (e.target.files.length) showPreview(e.target.files[0]);
-    });
-
-    function showPreview(file) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            imagePreview.src = e.target.result;
-            imagePreview.style.display = 'block';
-            placeholder.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    }
-}
 
 // Validación de fecha futura en el envío del formulario
 document.addEventListener('DOMContentLoaded', function() {

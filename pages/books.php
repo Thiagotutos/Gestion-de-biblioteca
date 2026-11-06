@@ -201,50 +201,35 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         <tr>
             <td><?php echo $libro['id']; ?></td>
             <td>
-                <div style="display: flex; align-items: center;">
-                    <?php if (!empty($libro['imagen'])): ?>
-                        <img src="../uploads/books/' . htmlspecialchars($libro['imagen']); ?>" alt="Portada" class="book-cover zoomable-image" style="object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openImageModal(this.src)">
-                    <?php else: ?>
-                        <div class="book-cover book-cover-placeholder">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
-                                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-                            </svg>
-                        </div>
-                    <?php endif; ?>
-                    <div>
-                        <a href="javascript:void(0);" 
-                           onclick="openBookModal(this);"
-                           class="link-book-detail"
-                           style="color: #0f172a; text-decoration: none; font-weight: bold;"
-                           data-id="<?php echo $libro['id']; ?>"
-                           data-title="<?php echo htmlspecialchars($libro['titulo']); ?>"
-                           data-author="<?php echo htmlspecialchars($libro['autor'] ?? 'N/A'); ?>"
-                           data-isbn="<?php echo htmlspecialchars($libro['isbn'] ?? 'N/A'); ?>"
-                           data-sig="<?php echo htmlspecialchars($sig_val); ?>"
-                           data-isbned="<?php echo htmlspecialchars($isbn_val); ?>"
-                           data-cat="<?php echo htmlspecialchars($libro['categoria'] ?? 'N/A'); ?>"
-                           data-pub="<?php echo htmlspecialchars($libro['editorial'] ?? 'N/A'); ?>"
-                           data-lugar="<?php echo htmlspecialchars($libro['lugar_editorial'] ?? ''); ?>"
-                           data-fecha="<?php echo !empty($libro['fecha_publicacion']) ? date('d/m/Y', strtotime($libro['fecha_publicacion'])) : ''; ?>"
-                           data-notas="<?php echo htmlspecialchars($libro['notas'] ?? ''); ?>"
-                           data-obs="<?php echo htmlspecialchars($libro['observacion'] ?? ''); ?>"
-                           data-estado="<?php echo htmlspecialchars($libro['estado']); ?>"
-                           data-img="<?php echo !empty($libro['imagen']) ? '../uploads/books/' . htmlspecialchars($libro['imagen']) : ''; ?>"
-                           title="Ver ficha técnica completa del libro">
-                            <?php echo htmlspecialchars($libro['titulo']); ?>
-                        </a>
-                        <?php if (!empty($libro['fecha_publicacion'])): ?>
-                            <div style="font-size: 0.78rem; color: #777;">Pub: <?php echo date('d/m/Y', strtotime($libro['fecha_publicacion'])); ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($libro['notas'])): ?>
-                            <div style="font-size: 0.75rem; color: #888; font-style: italic;" title="<?php echo htmlspecialchars($libro['notas']); ?>">Nota: <?php echo htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')); ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($libro['observacion'])): ?>
-                            <div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="<?php echo htmlspecialchars($libro['observacion']); ?>">Obs: <?php echo htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')); ?></div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                <a href="javascript:void(0);" 
+                   onclick="openBookModal(this);"
+                   class="link-book-detail"
+                   style="color: #0f172a; text-decoration: none; font-weight: bold; font-size: 0.95rem;"
+                   data-id="<?php echo $libro['id']; ?>"
+                   data-title="<?php echo htmlspecialchars($libro['titulo']); ?>"
+                   data-author="<?php echo htmlspecialchars($libro['autor'] ?? 'N/A'); ?>"
+                   data-isbn="<?php echo htmlspecialchars($libro['isbn'] ?? 'N/A'); ?>"
+                   data-sig="<?php echo htmlspecialchars($sig_val); ?>"
+                   data-isbned="<?php echo htmlspecialchars($isbn_val); ?>"
+                   data-cat="<?php echo htmlspecialchars($libro['categoria'] ?? 'N/A'); ?>"
+                   data-pub="<?php echo htmlspecialchars($libro['editorial'] ?? 'N/A'); ?>"
+                   data-lugar="<?php echo htmlspecialchars($libro['lugar_editorial'] ?? ''); ?>"
+                   data-fecha="<?php echo !empty($libro['fecha_publicacion']) ? date('d/m/Y', strtotime($libro['fecha_publicacion'])) : ''; ?>"
+                   data-notas="<?php echo htmlspecialchars($libro['notas'] ?? ''); ?>"
+                   data-obs="<?php echo htmlspecialchars($libro['observacion'] ?? ''); ?>"
+                   data-estado="<?php echo htmlspecialchars($libro['estado']); ?>"
+                   title="Ver ficha técnica completa del libro">
+                    <?php echo htmlspecialchars($libro['titulo']); ?>
+                </a>
+                <?php if (!empty($libro['fecha_publicacion'])): ?>
+                    <div style="font-size: 0.78rem; color: #777;">Pub: <?php echo date('d/m/Y', strtotime($libro['fecha_publicacion'])); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($libro['notas'])): ?>
+                    <div style="font-size: 0.75rem; color: #888; font-style: italic;" title="<?php echo htmlspecialchars($libro['notas']); ?>">Nota: <?php echo htmlspecialchars(mb_strimwidth($libro['notas'], 0, 40, '...')); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($libro['observacion'])): ?>
+                    <div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="<?php echo htmlspecialchars($libro['observacion']); ?>">Obs: <?php echo htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')); ?></div>
+                <?php endif; ?>
             </td>
             <td><strong><?php echo htmlspecialchars($libro['isbn'] ?? 'N/A'); ?></strong></td>
             <td><?php echo !empty($sig_val) ? '<span style="display:inline-block; background:#e0f2fe; color:#0284c7; padding:2px 7px; border-radius:4px; font-weight:600; font-size:0.83rem;">' . htmlspecialchars($sig_val) . '</span>' : '<span style="color:#94a3b8;">-</span>'; ?></td>
@@ -321,25 +306,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 <?php endif; ?>
 </div>
 
-<!-- Image Modal -->
-<div id="imageModal" class="image-modal" onclick="closeImageModal()">
-    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
-    <img class="image-modal-content" id="modalImage">
-</div>
-
 <script>
-function openImageModal(src) {
-    var modal = document.getElementById('imageModal');
-    var modalImg = document.getElementById('modalImage');
-    modal.style.display = 'flex';
-    modalImg.src = src;
-}
-
-function closeImageModal() {
-    var modal = document.getElementById('imageModal');
-    modal.style.display = 'none';
-}
-
 // === BÚSQUEDA EN VIVO Y POR CAMPO ===
 (function() {
     var searchInput = document.getElementById('liveSearchInput');
@@ -523,18 +490,6 @@ function openBookModal(btn) {
     estadoBadge.textContent = estado;
     estadoBadge.className = 'status-badge ' + (estado === 'Prestado' ? 'status-borrowed' : (estado === 'Extraviado' ? 'status-missing' : 'status-available'));
 
-    var imgPath = btn.getAttribute('data-img');
-    var imgEl = document.getElementById('mBookImg');
-    var noImgEl = document.getElementById('mBookNoImg');
-    if (imgPath && imgPath !== '') {
-        imgEl.src = imgPath;
-        imgEl.style.display = 'block';
-        noImgEl.style.display = 'none';
-    } else {
-        imgEl.style.display = 'none';
-        noImgEl.style.display = 'flex';
-    }
-
     modal.style.display = 'flex';
 }
 
@@ -550,7 +505,7 @@ function bindBookModalTriggers() {
 
 <!-- Modal HTML Ficha Rápida -->
 <div id="modalBookDetail" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 99999; align-items: center; justify-content: center; padding: 15px;" onclick="if(event.target===this) closeBookModal();">
-    <div style="background: white; border-radius: 8px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border-top: 5px solid var(--color-primary); padding: 24px;">
+    <div style="background: white; border-radius: 8px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border-top: 5px solid var(--color-primary); padding: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
             <div style="padding-right: 15px;">
                 <span id="mBookEstado" class="status-badge status-available" style="margin-bottom: 6px; display: inline-block;">Disponible</span>
@@ -560,46 +515,37 @@ function bindBookModalTriggers() {
             <button type="button" onclick="closeBookModal();" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 5px;" title="Cerrar">&times;</button>
         </div>
 
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
-            <div style="flex: 0 0 110px; text-align: center;">
-                <img id="mBookImg" src="" alt="Portada" style="width: 110px; height: 150px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); display: none;">
-                <div id="mBookNoImg" style="width: 110px; height: 150px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 0.8rem; text-align: center; padding: 10px;">
-                    Sin portada
-                </div>
-            </div>
-
-            <div style="flex: 1; min-width: 250px;">
-                <table style="width: 100%; font-size: 0.88rem; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b; width: 40%;"><strong>Nº Inventario:</strong></td>
-                        <td style="padding: 4px 0; font-weight: bold; color: #0f172a;" id="mBookIsbn">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>Signatura Top.:</strong></td>
-                        <td style="padding: 4px 0; font-weight: 600; color: #0284c7;" id="mBookSig">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>ISBN Comercial:</strong></td>
-                        <td style="padding: 4px 0; font-family: monospace;" id="mBookIsbnEd">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>Materia:</strong></td>
-                        <td style="padding: 4px 0;" id="mBookCat">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>Editorial:</strong></td>
-                        <td style="padding: 4px 0;" id="mBookPub">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>Lugar Editorial:</strong></td>
-                        <td style="padding: 4px 0;" id="mBookLugar">-</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #64748b;"><strong>Fecha Publicación:</strong></td>
-                        <td style="padding: 4px 0;" id="mBookFecha">-</td>
-                    </tr>
-                </table>
-            </div>
+        <div style="margin-bottom: 15px;">
+            <table style="width: 100%; font-size: 0.9rem; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b; width: 38%;"><strong>Nº Inventario:</strong></td>
+                    <td style="padding: 5px 0; font-weight: bold; color: #0f172a;" id="mBookIsbn">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>Signatura Topográfica:</strong></td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #0284c7;" id="mBookSig">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>ISBN Comercial:</strong></td>
+                    <td style="padding: 5px 0; font-family: monospace;" id="mBookIsbnEd">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>Materia:</strong></td>
+                    <td style="padding: 5px 0;" id="mBookCat">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>Editorial:</strong></td>
+                    <td style="padding: 5px 0;" id="mBookPub">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>Lugar Editorial:</strong></td>
+                    <td style="padding: 5px 0;" id="mBookLugar">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #64748b;"><strong>Fecha Publicación:</strong></td>
+                    <td style="padding: 5px 0;" id="mBookFecha">-</td>
+                </tr>
+            </table>
         </div>
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 0.85rem; margin-bottom: 15px;">
@@ -620,6 +566,5 @@ function bindBookModalTriggers() {
         </div>
     </div>
 </div>
-</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

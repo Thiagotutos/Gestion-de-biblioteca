@@ -127,7 +127,6 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
    - **Lugar de la Editorial**: Ciudad o país de publicación (ej. *Buenos Aires*, *Madrid*).
    - **Fecha de Publicación**: Fecha en que fue publicado el libro (bloquea fechas futuras).
    - **Materia / Categoría**: Buscador en tiempo real (ej. *Literatura*, *Historia*). Si no existe, se creará automáticamente al guardar.
-   - **Portada**: Imagen de portada (`.jpg`, `.png`, `.webp`, `.gif`) almacenada en [`uploads/books/`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/uploads/books).
    - **Notas (opcional)**: Notas internas de catalogación o estado del ejemplar.
    - **Observación (opcional)**: Observaciones complementarias sobre el libro.
    - **Estado Inicial**: `Disponible` por defecto.
@@ -310,10 +309,9 @@ A la derecha del criterio, utiliza el selector **"Estado:"** para filtrar según
 > *(Captura recomendada: tabla de resultados con celdas de Signatura, Título, Materia, Autor, Estado badge y paginación inferior).*
 
 #### Paso 5: Interpretar la Tabla de Resultados y Acciones
-- **Portada**: Miniatura de la cubierta del libro (o imagen genérica si no posee).
 - **Inventario / ISBN**: N° patrimonial correlativo y código ISBN de la edición.
 - **Signatura**: Ubicación topográfica en la estantería física de la biblioteca.
-- **Título / Materia**: Nombre completo de la obra y su clasificación temática.
+- **Título / Materia**: Nombre completo de la obra y su clasificación temática (hacer clic en el título abre la Ficha Técnica Rápida del ejemplar).
 - **Autor**: Autor principal del ejemplar.
 - **Estado**: Etiqueta visual indicativa (`Disponible` en verde, `Prestado` en amarillo/naranja, `Extraviado` en rojo).
 - **Acciones (solo Bibliotecarios y Administradores)**:
@@ -402,7 +400,7 @@ A la derecha del criterio, utiliza el selector **"Estado:"** para filtrar según
 
 #### Requisitos Funcionales (RF)
 * **RF-01 (Autenticación y Control de Accesos - RBAC)**: El sistema debe autenticar a los usuarios mediante credenciales encriptadas y restringir el acceso a los módulos operativos de acuerdo con el rol asignado (`Administrador`, `Bibliotecario`, `Lector`).
-* **RF-02 (Gestión del Catálogo Bibliográfico Extendido)**: El sistema debe proporcionar operaciones CRUD para libros, incluyendo portada, número de inventario/ISBN, autor, categoría, editorial, lugar de editorial, fecha de publicación, estantería, notas internas y observaciones.
+* **RF-02 (Gestión del Catálogo Bibliográfico Extendido)**: El sistema debe proporcionar operaciones CRUD para libros, incluyendo número de inventario/ISBN, título, autor, categoría/materia, editorial, lugar de editorial, fecha de publicación, estantería/signatura, notas internas y observaciones (diseñado con una interfaz ágil y sin sobrecarga de imágenes de portada para máxima velocidad en terminales escolares).
 * **RF-03 (Búsqueda en Tiempo Real y Paginación Asíncrona)**: El sistema debe permitir búsquedas multicriterio instantáneas mediante AJAX (título, autor, inventario, categoría, editorial, lugar editorial) con paginación optimizada a 25 registros por página.
 * **RF-04 (Gestión del Ciclo de Préstamos y Devoluciones con Turno y Curso)**: El sistema debe emitir préstamos a ejemplares disponibles registrando alumno/a, documento, turno escolar (`Mañana`, `Tarde`, `Noche`) y curso (ej. "3ro A"), y permitir la devolución con 1 clic registrando la fecha/hora real de restitución.
 * **RF-05 (Tablero de Control e Indicadores en Vivo)**: El sistema debe presentar un panel informativo consolidado en tiempo real con recuento de inventario, estado de préstamos y el estado operativo del establecimiento (Abierto/Cerrado) basado en horarios configurados.
@@ -459,7 +457,7 @@ Almacena el catálogo de títulos y ejemplares bibliográficos.
 - `fecha_publicacion` (DATE, NULL): **[NUEVO]** Fecha en que fue publicado el libro (restringida a hoy o pasado).
 - `category_id` (INT, FK -> categories.id, NULL): Clasificación temática o Materia (`ON DELETE SET NULL`).
 - `rack_id` (INT, FK -> racks.id, NULL): Estante o ubicación física (`ON DELETE SET NULL`).
-- `imagen` (VARCHAR(255), NULL): Nombre de archivo de la portada en `uploads/books/`.
+- `imagen` (VARCHAR(255), NULL): Columna de compatibilidad histórica (en desuso en favor de interfaz ligera sin portadas).
 - `notas` (TEXT, NULL): **[NUEVO]** Notas internas del ejemplar (opcional).
 - `observacion` (TEXT, NULL): **[NUEVO]** Observaciones adicionales sobre el libro.
 - `estado` (ENUM('Disponible', 'Prestado', 'Extraviado'), DEFAULT 'Disponible'): Estado de circulación.
@@ -644,7 +642,7 @@ flowchart TD
 * **CU-03: Registrar/Editar Libro en el Catálogo**
   - *Actores*: Bibliotecario, Administrador.
   - *Precondición*: Permisos de edición.
-  - *Flujo*: A través de [`pages/add_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/add_book.php) o [`pages/edit_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/edit_book.php), el usuario suministra título, autor, editorial, lugar de la editorial, fecha de publicación, categoría, portada, notas u observaciones. Se procesa la carga de imagen en `uploads/books/` y se persiste en `books`.
+  - *Flujo*: A través de [`pages/add_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/add_book.php) o [`pages/edit_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/edit_book.php), el usuario suministra título, autor, editorial, lugar de la editorial, fecha de publicación, categoría, notas u observaciones, persistiendo la ficha en `books`.
 
 * **CU-04: Registrar Préstamo de Libro con Turno y Curso**
   - *Actores*: Administrador.

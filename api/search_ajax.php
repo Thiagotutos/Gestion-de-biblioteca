@@ -151,16 +151,10 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
 
         echo '<tr>';
         echo '<td>' . $libro['id'] . '</td>';
-        echo '<td><div style="display: flex; align-items: center;">';
-        if (!empty($libro['imagen'])) {
-            echo '<img src="../uploads/books/' . htmlspecialchars($libro['imagen']) . '" alt="Portada" class="book-cover zoomable-image" style="object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openImageModal(this.src)">';
-        } else {
-            echo '<div class="book-cover book-cover-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>';
-        }
-        $imgAttr = !empty($libro['imagen']) ? '../uploads/books/' . htmlspecialchars($libro['imagen']) : '';
+        echo '<td>';
         $fechaPub = !empty($libro['fecha_publicacion']) ? date('d/m/Y', strtotime($libro['fecha_publicacion'])) : '';
 
-        echo '<div><a href="javascript:void(0);" onclick="openBookModal(this);" class="link-book-detail" style="color: #0f172a; text-decoration: none; font-weight: bold;" ' .
+        echo '<a href="javascript:void(0);" onclick="openBookModal(this);" class="link-book-detail" style="color: #0f172a; text-decoration: none; font-weight: bold; font-size: 0.95rem;" ' .
              'data-id="' . $libro['id'] . '" ' .
              'data-title="' . htmlspecialchars($libro['titulo']) . '" ' .
              'data-author="' . htmlspecialchars($libro['autor'] ?? 'N/A') . '" ' .
@@ -174,7 +168,7 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
              'data-notas="' . htmlspecialchars($libro['notas'] ?? '') . '" ' .
              'data-obs="' . htmlspecialchars($libro['observacion'] ?? '') . '" ' .
              'data-estado="' . htmlspecialchars($libro['estado']) . '" ' .
-             'data-img="' . $imgAttr . '" title="Ver ficha técnica completa del libro">' . 
+             'title="Ver ficha técnica completa del libro">' . 
              htmlspecialchars($libro['titulo']) . '</a>';
         if (!empty($libro['fecha_publicacion'])) {
             echo '<div style="font-size: 0.78rem; color: #777;">Pub: ' . date('d/m/Y', strtotime($libro['fecha_publicacion'])) . '</div>';
@@ -185,7 +179,7 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
         if (!empty($libro['observacion'])) {
             echo '<div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="' . htmlspecialchars($libro['observacion']) . '">Obs: ' . htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')) . '</div>';
         }
-        echo '</div></div></td>';
+        echo '</td>';
         echo '<td><strong>' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '</strong></td>';
         echo '<td>' . (!empty($sig_val) ? '<span style="display:inline-block; background:#e0f2fe; color:#0284c7; padding:2px 7px; border-radius:4px; font-weight:600; font-size:0.83rem;">' . htmlspecialchars($sig_val) . '</span>' : '<span style="color:#94a3b8;">-</span>') . '</td>';
         echo '<td>' . (!empty($isbn_val) ? '<span style="font-size:0.83rem; font-family:monospace;">' . htmlspecialchars($isbn_val) . '</span>' : '<span style="color:#94a3b8;">-</span>') . '</td>';
