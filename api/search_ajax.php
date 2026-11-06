@@ -157,7 +157,25 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
         } else {
             echo '<div class="book-cover book-cover-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>';
         }
-        echo '<div><strong>' . htmlspecialchars($libro['titulo']) . '</strong>';
+        $imgAttr = !empty($libro['imagen']) ? '../uploads/books/' . htmlspecialchars($libro['imagen']) : '';
+        $fechaPub = !empty($libro['fecha_publicacion']) ? date('d/m/Y', strtotime($libro['fecha_publicacion'])) : '';
+
+        echo '<div><a href="javascript:void(0);" onclick="openBookModal(this);" class="link-book-detail" style="color: #0f172a; text-decoration: none; font-weight: bold;" ' .
+             'data-id="' . $libro['id'] . '" ' .
+             'data-title="' . htmlspecialchars($libro['titulo']) . '" ' .
+             'data-author="' . htmlspecialchars($libro['autor'] ?? 'N/A') . '" ' .
+             'data-isbn="' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '" ' .
+             'data-sig="' . htmlspecialchars($sig_val) . '" ' .
+             'data-isbned="' . htmlspecialchars($isbn_val) . '" ' .
+             'data-cat="' . htmlspecialchars($libro['categoria'] ?? 'N/A') . '" ' .
+             'data-pub="' . htmlspecialchars($libro['editorial'] ?? 'N/A') . '" ' .
+             'data-lugar="' . htmlspecialchars($libro['lugar_editorial'] ?? '') . '" ' .
+             'data-fecha="' . $fechaPub . '" ' .
+             'data-notas="' . htmlspecialchars($libro['notas'] ?? '') . '" ' .
+             'data-obs="' . htmlspecialchars($libro['observacion'] ?? '') . '" ' .
+             'data-estado="' . htmlspecialchars($libro['estado']) . '" ' .
+             'data-img="' . $imgAttr . '" title="Ver ficha técnica completa del libro">' . 
+             htmlspecialchars($libro['titulo']) . '</a>';
         if (!empty($libro['fecha_publicacion'])) {
             echo '<div style="font-size: 0.78rem; color: #777;">Pub: ' . date('d/m/Y', strtotime($libro['fecha_publicacion'])) . '</div>';
         }

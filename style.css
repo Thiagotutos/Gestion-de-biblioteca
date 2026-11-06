@@ -1057,3 +1057,97 @@ body.sidebar-collapsed .sidebar {
     }
 }
 
+/* ==========================================================================
+   ESTILOS PARA IMPRESIÓN LIMPIA (@media print)
+   ========================================================================== */
+@media print {
+    /* Ocultar elementos de navegación y acciones interactivas */
+    .sidebar, 
+    .navbar, 
+    .btn, 
+    .btn-scroll-top, 
+    .search-filters-bar, 
+    .pagination-bar, 
+    .tabs-nav, 
+    #importLoadingOverlay,
+    .alert,
+    form,
+    td:last-child, 
+    th:last-child {
+        display: none !important;
+    }
+
+    body, .main-content, .dashboard-container {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        font-size: 10pt !important;
+    }
+
+    .table, .data-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 15px !important;
+    }
+
+    .table th, .table td, .data-table th, .data-table td {
+        border: 1px solid #333333 !important;
+        padding: 6px 8px !important;
+        color: #000000 !important;
+        background: transparent !important;
+    }
+
+    .table th, .data-table th {
+        background-color: #f1f5f9 !important;
+        font-weight: bold !important;
+    }
+
+    .status-badge {
+        border: 1px solid #555555 !important;
+        color: #000000 !important;
+        background: transparent !important;
+        font-weight: bold !important;
+        padding: 1px 4px !important;
+    }
+}
+
+/* ==========================================================================
+   MICRO-INDICADOR PULSANTE PARA PRÉSTAMOS VENCIDOS / ATENCIÓN
+   ========================================================================== */
+.pulse-dot-danger {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    margin-right: 5px;
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.7);
+    animation: pulseDanger 1.8s infinite;
+    vertical-align: middle;
+}
+
+@keyframes pulseDanger {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.pulse-dot-warning {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #f59e0b;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+

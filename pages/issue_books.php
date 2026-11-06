@@ -405,12 +405,25 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
 
         <!-- Pestaña 1: Préstamos Activos -->
         <div id="paneActivos">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                <h3>Libros Actualmente Prestados (<?php echo count($prestamos); ?>)</h3>
-                <span style="font-size: 0.85rem; color: #555;">Plazo de renovación: <strong>1 semana</strong></span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <h3 style="margin: 0;">Libros Actualmente Prestados (<?php echo count($prestamos); ?>)</h3>
+                    <small style="color: #666;">Plazo de renovación estándar: <strong>1 semana</strong></small>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: inline-flex; background: #e2e8f0; border-radius: 6px; padding: 2px;">
+                        <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #0288d1; color: white; border: none; border-radius: 4px;" onclick="filterTurnoTable('todos', this)">Todos</button>
+                        <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Mañana', this)">Mañana</button>
+                        <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Tarde', this)">Tarde</button>
+                        <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Noche', this)">Noche</button>
+                    </div>
+                    <button type="button" onclick="window.print();" class="btn" style="padding: 5px 12px; font-size: 0.82rem; background: #475569; color: white; border: none;" title="Imprimir planilla de préstamos">
+                        Imprimir Planilla
+                    </button>
+                </div>
             </div>
             <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table" id="tablaPrestamosActivos">
                 <thead>
                     <tr>
                         <th>Nº Inv.</th>
@@ -434,8 +447,9 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                         $hoy_ts = strtotime(date('Y-m-d'));
                         $limite_ts = strtotime($fecha_limite);
                         $dias_restantes = (int) round(($limite_ts - $hoy_ts) / 86400);
+                        $turno_val = trim($p['turno'] ?? '');
                     ?>
-                    <tr>
+                    <tr class="row-prestamo" data-turno="<?php echo htmlspecialchars($turno_val); ?>">
                         <td><strong><?php echo htmlspecialchars($p['isbn'] ?? 'S/N'); ?></strong></td>
                         <td style="white-space: nowrap; font-size: 0.82rem; color: #555;">
                             <?php echo date('d/m/Y', strtotime($p['fecha_hora'])); ?><br>
@@ -466,15 +480,15 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                             <strong style="font-size: 0.9rem;"><?php echo date('d/m/Y', $limite_ts); ?></strong><br>
                             <?php if ($dias_restantes < 0): ?>
                                 <span class="status-badge" style="background-color: #d32f2f; color: white; font-weight: bold;">
-                                    Vencido (<?php echo abs($dias_restantes); ?>d)
+                                    <span class="pulse-dot-danger"></span>Vencido (<?php echo abs($dias_restantes); ?>d)
                                 </span>
                             <?php elseif ($dias_restantes === 0): ?>
                                 <span class="status-badge" style="background-color: #f57c00; color: white; font-weight: bold;">
-                                    Vence Hoy
+                                    <span class="pulse-dot-warning"></span>Vence Hoy
                                 </span>
                             <?php elseif ($dias_restantes <= 2): ?>
                                 <span class="status-badge" style="background-color: #ff9800; color: white;">
-                                    Vence en <?php echo $dias_restantes; ?> días
+                                    <span class="pulse-dot-warning"></span>Vence en <?php echo $dias_restantes; ?> días
                                 </span>
                             <?php else: ?>
                                 <span class="status-badge" style="background-color: #2e7d32; color: white;">
@@ -896,6 +910,30 @@ function switchLoanTab(tabName) {
         if (tabActivosBtn && tabActivosBtn.className.indexOf('active') === -1) {
             tabActivosBtn.className += ' active';
         }
+    }
+}
+
+// Filtrar filas de préstamos por Turno en el cliente (Vanilla JS ES5)
+function filterTurnoTable(turnoDeseado, clickedBtn) {
+    var rows = document.querySelectorAll('.row-prestamo');
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var rowTurno = row.getAttribute('data-turno') || '';
+        if (turnoDeseado === 'todos' || rowTurno.toLowerCase() === turnoDeseado.toLowerCase()) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+    // Actualizar estilo visual de los botones de filtro
+    if (clickedBtn && clickedBtn.parentNode) {
+        var buttons = clickedBtn.parentNode.getElementsByTagName('button');
+        for (var b = 0; b < buttons.length; b++) {
+            buttons[b].style.background = 'transparent';
+            buttons[b].style.color = '#475569';
+        }
+        clickedBtn.style.background = '#0288d1';
+        clickedBtn.style.color = '#ffffff';
     }
 }
 </script>
