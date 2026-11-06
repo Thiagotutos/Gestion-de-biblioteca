@@ -97,6 +97,8 @@ cp -r ${APP_SOURCE}/pages ${APP_DIR}/
 cp -r ${APP_SOURCE}/api ${APP_DIR}/
 cp -r ${APP_SOURCE}/includes ${APP_DIR}/
 cp -r ${APP_SOURCE}/database ${APP_DIR}/
+cp -r ${APP_SOURCE}/scripts ${APP_DIR}/ 2>/dev/null || true
+mkdir -p ${APP_DIR}/backups
 cp -r ${APP_SOURCE}/uploads ${APP_DIR}/
 cp -r ${APP_SOURCE}/style.css ${APP_DIR}/
 cp -r ${APP_SOURCE}/index.php ${APP_DIR}/
@@ -131,6 +133,12 @@ chown -R www-data:www-data ${APP_DIR}
 find ${APP_DIR} -type d -exec chmod 755 {} \;
 find ${APP_DIR} -type f -exec chmod 644 {} \;
 chmod -R 775 ${APP_DIR}/uploads
+chmod -R 775 ${APP_DIR}/backups
+
+# Configurar cron mensual para respaldos automáticos (día 1 de cada mes a las 03:00)
+echo "⏰ Configurando respaldo mensual automático en Cron..."
+CRON_CMD="0 3 1 * * php ${APP_DIR}/scripts/cron_backup.php >> /var/log/biblioteca_backup.log 2>&1"
+(crontab -l 2>/dev/null | grep -v "cron_backup.php"; echo "$CRON_CMD") | crontab -
 
 echo ""
 echo "🌐 [5/6] Configurando Virtual Host de NGINX..."

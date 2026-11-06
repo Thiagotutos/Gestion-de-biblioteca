@@ -28,6 +28,9 @@ sheet_data.csv
 # Respaldos de base de datos generados en tiempo de ejecución
 respaldo_*.sql
 backup_*.sql
+backups/*.sql
+!backups/.gitkeep
+!backups/.htaccess
 
 # Archivos de registro y depuración
 *.log

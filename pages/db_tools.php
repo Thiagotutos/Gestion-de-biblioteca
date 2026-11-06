@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/backup_manager.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
@@ -21,6 +22,65 @@ $stats = [
     'categorias' => (int)$pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn(),
 ];
 
+// Disparador pasivo: verifica si ya existe el respaldo mensual automático del mes actual
+try {
+    $monthlyAuto = runMonthlyAutoBackup($pdo, false);
+    if ($monthlyAuto['created']) {
+        $_SESSION['success_msg'] = "Copia mensual automática generada: " . $monthlyAuto['filename'] . ($monthlyAuto['deleted'] > 0 ? " (se eliminó la copia más antigua para respetar el tope de 10)." : "");
+    }
+} catch (Exception $eAuto) {}
+
+// Acción 1: Crear copia de seguridad manual inmediata
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_backup_now'])) {
+    $res = runMonthlyAutoBackup($pdo, true);
+    if ($res['created']) {
+        $_SESSION['success_msg'] = "Copia de seguridad generada con éxito (" . $res['filename'] . ")." . ($res['deleted'] > 0 ? " Se eliminó la copia más antigua para conservar el límite de 10." : "");
+    } else {
+        $_SESSION['error_msg'] = $res['message'];
+    }
+    header('Location: db_tools.php');
+    exit;
+}
+
+// Acción 2: Eliminar copia de seguridad almacenada
+if (isset($_GET['delete_backup'])) {
+    $delFile = basename($_GET['delete_backup']);
+    $delPath = initBackupDirectory() . '/' . $delFile;
+    if (file_exists($delPath) && str_ends_with(strtolower($delFile), '.sql')) {
+        @unlink($delPath);
+        $_SESSION['success_msg'] = "Copia de seguridad '$delFile' eliminada correctamente.";
+    } else {
+        $_SESSION['error_msg'] = "El archivo especificado no existe o es inválido.";
+    }
+    header('Location: db_tools.php');
+    exit;
+}
+
+// Acción 3: Restaurar desde copia almacenada en el servidor
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore_stored'])) {
+    $confirm = $_POST['confirm_restore_stored'] ?? '0';
+    if ($confirm !== '1') {
+        $_SESSION['error_msg'] = "Debe marcar la casilla de confirmación para proceder con la restauración.";
+        header('Location: db_tools.php');
+        exit;
+    }
+    $resFile = basename($_POST['backup_filename'] ?? '');
+    $resPath = initBackupDirectory() . '/' . $resFile;
+    if (!file_exists($resPath) || !str_ends_with(strtolower($resFile), '.sql')) {
+        $_SESSION['error_msg'] = "El archivo de respaldo seleccionado no existe en el servidor.";
+        header('Location: db_tools.php');
+        exit;
+    }
+    try {
+        $executed = executeSqlFileStream($pdo, $resPath);
+        $_SESSION['success_msg'] = "Base de datos restaurada correctamente desde '$resFile'. Se procesaron " . number_format($executed) . " sentencias SQL con éxito.";
+    } catch (Exception $e) {
+        $_SESSION['error_msg'] = "Error durante la restauración: " . $e->getMessage();
+    }
+    header('Location: db_tools.php');
+    exit;
+}
+
 // Detección de carga que supera post_max_size del servidor (cuando $_POST llega vacío pero se enviaron datos)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && (int)$_SERVER['CONTENT_LENGTH'] > 0) {
     $maxPost = ini_get('post_max_size');
@@ -30,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_SERVER['CO
     exit;
 }
 
-// Procesar importación de archivo .sql
+// Acción 4: Procesar importación de archivo .sql subido desde el navegador
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     $confirm = $_POST['confirm_restore'] ?? '0';
 
@@ -74,132 +134,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         exit;
     }
 
-    // Configurar tiempo y memoria generosos para archivos de gran volumen
-    @set_time_limit(600);
-    @ini_set('memory_limit', '512M');
-
-    $handle = fopen($fileTmp, 'r');
-    if (!$handle) {
-        $_SESSION['error_msg'] = "No se pudo abrir el archivo SQL para su lectura en el servidor.";
-        header('Location: db_tools.php');
-        exit;
-    }
-
-    $executed = 0;
     try {
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
-        $pdo->exec("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO,ALLOW_INVALID_DATES';");
-        try {
-            $pdo->exec("SET SESSION max_allowed_packet = 134217728;"); // 128 MB para paquetes grandes
-        } catch (Exception $ePkt) {
-            // Ignorar si el usuario no tiene privilegios de alterar max_allowed_packet por sesión
-        }
-
-        $currentQuery = '';
-        $inString = false;
-        $stringChar = '';
-        $inMultilineComment = false;
-
-        // Parser seguro y eficiente por flujo (streaming): memoria constante < 4MB
-        while (($line = fgets($handle)) !== false) {
-            $trimmedLine = trim($line);
-
-            // Optimización: descartar rápidamente líneas de comentarios si no estamos en string
-            if (!$inString && !$inMultilineComment) {
-                if ($trimmedLine === '' || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '#')) {
-                    continue;
-                }
-            }
-
-            $len = strlen($line);
-            for ($i = 0; $i < $len; $i++) {
-                $char = $line[$i];
-
-                // Comentarios multilínea /* ... */ fuera de strings
-                if (!$inString) {
-                    if (!$inMultilineComment && $char === '/' && $i + 1 < $len && $line[$i + 1] === '*') {
-                        // Preservar directivas condicionales ejecutables de MySQL (ej: /*!40101 ... */)
-                        if ($i + 2 < $len && $line[$i + 2] === '!') {
-                            $i += 2;
-                            while ($i < $len && ctype_digit($line[$i])) {
-                                $i++;
-                            }
-                            continue;
-                        }
-                        $inMultilineComment = true;
-                        $i++;
-                        continue;
-                    } elseif ($inMultilineComment && $char === '*' && $i + 1 < $len && $line[$i + 1] === '/') {
-                        $inMultilineComment = false;
-                        $i++;
-                        continue;
-                    }
-                }
-
-                if ($inMultilineComment) {
-                    continue;
-                }
-
-                // Comentarios de fin de línea (-- o #) fuera de strings
-                if (!$inString) {
-                    if ($char === '#' || ($char === '-' && $i + 1 < $len && $line[$i + 1] === '-')) {
-                        break;
-                    }
-                }
-
-                // Detección de cadenas de texto y delimitadores protegidos
-                if (($char === "'" || $char === '"' || $char === '`') && ($i === 0 || $line[$i - 1] !== '\\')) {
-                    if (!$inString) {
-                        $inString = true;
-                        $stringChar = $char;
-                    } elseif ($stringChar === $char) {
-                        if ($char === "'" && $i + 1 < $len && $line[$i + 1] === "'") {
-                            $currentQuery .= $char;
-                            $i++;
-                            $currentQuery .= $line[$i];
-                            continue;
-                        }
-                        $inString = false;
-                    }
-                }
-
-                // Fin de sentencia SQL fuera de cadenas
-                if ($char === ';' && !$inString) {
-                    $trimmed = trim($currentQuery);
-                    if ($trimmed !== '') {
-                        $pdo->exec($trimmed);
-                        $executed++;
-                    }
-                    $currentQuery = '';
-                } else {
-                    $currentQuery .= $char;
-                }
-            }
-        }
-
-        $trimmed = trim($currentQuery);
-        if ($trimmed !== '') {
-            $pdo->exec($trimmed);
-            $executed++;
-        }
-
-        fclose($handle);
-
-        $pdo->exec("SET SESSION sql_mode = '';");
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
+        $executed = executeSqlFileStream($pdo, $fileTmp);
         $_SESSION['success_msg'] = "Base de datos restaurada correctamente. Se procesaron y ejecutaron " . number_format($executed) . " sentencias SQL con éxito.";
     } catch (Exception $e) {
-        if (is_resource($handle)) {
-            fclose($handle);
-        }
-        $pdo->exec("SET SESSION sql_mode = '';");
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
-        $_SESSION['error_msg'] = "Error durante la restauración (sentencia #" . ($executed + 1) . "): " . $e->getMessage();
+        $_SESSION['error_msg'] = "Error durante la restauración: " . $e->getMessage();
     }
 
     header('Location: db_tools.php');
     exit;
 }
+
+$storedBackups = getStoredBackups();
+$totalStored = count($storedBackups);
 ?>
 
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
@@ -300,6 +247,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
         </form>
     </div>
 
+</div>
+
+<!-- SECCIÓN 3: RESPALDOS AUTOMÁTICOS EN EL SERVIDOR (RETENCIÓN MÁXIMA 10 COPIAS) -->
+<div class="form-container" style="max-width: 100%; margin-top: 25px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 15px;">
+        <div>
+            <h3 style="margin: 0; color: var(--color-primary); display: flex; align-items: center; gap: 8px;">
+                <span>📦</span> Copias de Seguridad Automáticas en el Servidor
+            </h3>
+            <small style="color: #666;">
+                Frecuencia: <strong>Cada mes</strong> &bull; Política de retención: <strong>Máximo 10 copias</strong> (al llegar a 11, se borra automáticamente la más antigua).
+            </small>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span style="background: <?php echo $totalStored >= 10 ? '#dc3545' : 'var(--color-primary)'; ?>; color: white; padding: 5px 12px; border-radius: 12px; font-size: 0.82rem; font-weight: 600;">
+                <?php echo $totalStored; ?> / 10 Copias Almacenadas
+            </span>
+            <form method="POST" style="margin: 0;" onsubmit="return confirm('¿Desea generar una copia de seguridad en el servidor ahora mismo?');">
+                <button type="submit" name="create_backup_now" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.9rem;">
+                     Crear Respaldo Ahora
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div style="background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 12px 15px; border-radius: 6px; font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5;">
+        ℹ <strong>Automatización Mensual:</strong> El sistema genera automáticamente una copia de respaldo completa el 1º de cada mes. Cuando la carpeta alcanza las <strong>10 copias</strong>, el sistema elimina automáticamente la más antigua para mantener siempre disponible el historial de los últimos 10 meses sin saturar el espacio en disco.
+    </div>
+
+    <?php if (empty($storedBackups)): ?>
+        <div style="text-align: center; padding: 35px 15px; color: #777; background: #fafafa; border-radius: 6px; border: 1px dashed var(--color-border);">
+            <div style="font-size: 2.2rem; margin-bottom: 10px;">📭</div>
+            <p style="margin: 0 0 5px 0; font-size: 1rem; font-weight: 500; color: #475569;">No hay copias de seguridad almacenadas todavía en el servidor.</p>
+            <small style="color: #94a3b8;">Se creará una copia automáticamente al inicio de cada mes, o puedes hacer clic en <strong>"Crear Respaldo Ahora"</strong>.</small>
+        </div>
+    <?php else: ?>
+        <div class="table-responsive">
+            <table class="table" style="width: 100%; font-size: 0.92rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 32%;">Archivo SQL</th>
+                        <th style="width: 16%;">Tipo</th>
+                        <th style="width: 20%;">Fecha de Creación</th>
+                        <th style="width: 12%;">Tamaño</th>
+                        <th style="width: 20%; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($storedBackups as $bk): ?>
+                        <tr>
+                            <td>
+                                <strong style="color: #1e293b;"><?php echo htmlspecialchars($bk['filename']); ?></strong>
+                            </td>
+                            <td>
+                                <?php if ($bk['is_auto']): ?>
+                                    <span class="status-badge" style="background: #2563eb; color: white; font-size: 0.75rem; padding: 2px 8px;">Mensual Automática</span>
+                                <?php else: ?>
+                                    <span class="status-badge" style="background: #64748b; color: white; font-size: 0.75rem; padding: 2px 8px;">Manual</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="color: #475569;"><?php echo $bk['date_formatted']; ?></td>
+                            <td style="font-family: monospace; font-weight: 600; color: #0f172a;"><?php echo $bk['size_formatted']; ?></td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                    <a href="../api/download_backup.php?file=<?php echo urlencode($bk['filename']); ?>" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem; text-decoration: none; background: #0288d1;" title="Descargar archivo a tu computadora">
+                                         Bajar
+                                    </a>
+
+                                    <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('¿Está COMPLETAMENTE SEGURO de restaurar la base de datos a esta copia (<?php echo htmlspecialchars($bk['filename']); ?>)? Se sobreescribirán los datos actuales.');">
+                                        <input type="hidden" name="backup_filename" value="<?php echo htmlspecialchars($bk['filename']); ?>">
+                                        <input type="hidden" name="confirm_restore_stored" value="1">
+                                        <button type="submit" name="restore_stored" class="btn btn-edit" style="width: auto !important; min-width: 0 !important; padding: 4px 10px; font-size: 0.8rem;" title="Restaurar esta versión en la base de datos">
+                                             Restaurar
+                                        </button>
+                                    </form>
+
+                                    <a href="db_tools.php?delete_backup=<?php echo urlencode($bk['filename']); ?>" class="btn btn-delete" style="width: auto !important; min-width: 0 !important; padding: 4px 10px; font-size: 0.8rem; text-decoration: none;" onclick="return confirm('¿Confirma que desea eliminar esta copia de seguridad del servidor?');" title="Eliminar este archivo">
+                                         Borrar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
