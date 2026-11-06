@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * includes/backup_manager.php
  * Gestor centralizado de Copias de Seguridad (Exportación, Restauración, Rotación y Automatización Mensual).
@@ -14,7 +14,10 @@ if (!defined('BACKUP_DIR')) {
 function initBackupDirectory(): string {
     $dir = BACKUP_DIR;
     if (!is_dir($dir)) {
-        @mkdir($dir, 0775, true);
+        @mkdir($dir, 0777, true);
+    }
+    if (is_dir($dir) && !is_writable($dir)) {
+        @chmod($dir, 0777);
     }
     // Proteger directorio en Apache
     $htaccess = $dir . '/.htaccess';
@@ -47,11 +50,23 @@ function createDatabaseSqlDump(PDO $pdo, $destination, string $userTag = 'Sistem
     if ($isResource) {
         $fp = $destination;
     } else {
+        $dir = dirname($filePath);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        if (is_dir($dir) && !is_writable($dir)) {
+            @chmod($dir, 0777);
+        }
+
         $fp = @fopen($filePath, 'w');
         if (!$fp) {
+            $msg = 'No se pudo abrir el archivo de destino para escritura.';
+            if (!is_writable($dir)) {
+                $msg = 'La carpeta de respaldos (backups/) no tiene permisos de escritura para el servidor web (PHP-FPM/Apache). Por favor ejecuta en la terminal de tu servidor: sudo chmod -R 777 /var/www/Gestion-de-biblioteca/backups';
+            }
             return [
                 'success' => false,
-                'error' => 'No se pudo abrir el archivo de destino para escritura.',
+                'error' => $msg,
                 'file' => $filePath,
                 'size' => 0,
                 'tables' => 0

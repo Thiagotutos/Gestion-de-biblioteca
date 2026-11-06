@@ -145,6 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_db'])) {
     exit;
 }
 
+$backupDir = initBackupDirectory();
+$isBackupDirWritable = is_writable($backupDir);
 $storedBackups = getStoredBackups();
 $totalStored = count($storedBackups);
 ?>
@@ -228,7 +230,7 @@ $totalStored = count($storedBackups);
             <strong>ADVERTENCIA:</strong> Esta acción ejecutará las instrucciones del archivo SQL seleccionado. Podría sobreescribir o modificar tablas existentes. Se recomienda realizar una exportación previa antes de restaurar.
         </div>
 
-        <form method="POST" enctype="multipart/form-data" id="formImportDb" onsubmit="return confirm('¿Está COMPLETAMENTE SEGURO de restaurar la base de datos? Se reemplazarán los datos actuales con los del archivo seleccionado.');">
+        <form method="POST" enctype="multipart/form-data" id="formImportDb">
             <div class="form-group">
                 <label for="sqlFile">Seleccionar Archivo SQL (.sql)</label>
                 <input type="file" name="sql_file" id="sqlFile" class="form-control" accept=".sql" required style="padding: 8px;">
@@ -236,12 +238,12 @@ $totalStored = count($storedBackups);
 
             <div class="form-group" style="margin-top: 15px;">
                 <label style="display: flex; align-items: center; gap: 10px; font-weight: normal; cursor: pointer; color: #333;">
-                    <input type="checkbox" name="confirm_restore" value="1" required style="width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="confirm_restore" id="chkConfirmRestore" value="1" required style="width: 18px; height: 18px; cursor: pointer;">
                     <span>Entiendo los riesgos y confirmo que deseo restaurar la base de datos.</span>
                 </label>
             </div>
 
-            <button type="submit" name="import_db" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; background-color: var(--color-accent); margin-top: 10px;">
+            <button type="submit" name="import_db" id="btnSubmitImport" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; background-color: var(--color-accent); margin-top: 10px;">
                 Importar Datos / Restaurar Base de Datos
             </button>
         </form>
@@ -251,10 +253,18 @@ $totalStored = count($storedBackups);
 
 <!-- SECCIÓN 3: RESPALDOS AUTOMÁTICOS EN EL SERVIDOR (RETENCIÓN MÁXIMA 10 COPIAS) -->
 <div class="form-container" style="max-width: 100%; margin-top: 25px;">
+    <?php if (!$isBackupDirWritable): ?>
+    <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 6px; font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5;">
+        <strong>Atención (Permisos en Servidor):</strong> La carpeta de almacenamiento de respaldos (<code>backups/</code>) no cuenta con permisos de escritura para el servidor web.<br>
+        Para habilitar la creación y almacenamiento de copias, ejecuta este comando en la terminal de tu servidor Linux:<br>
+        <code style="display:inline-block; margin-top:6px; background:#450a0a; color:#fecaca; padding:4px 8px; border-radius:4px; font-weight:bold;">sudo chmod -R 777 /var/www/Gestion-de-biblioteca/backups</code>
+    </div>
+    <?php endif; ?>
+
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--color-border); padding-bottom: 15px;">
         <div>
             <h3 style="margin: 0; color: var(--color-primary); display: flex; align-items: center; gap: 8px;">
-                <span>📦</span> Copias de Seguridad Automáticas en el Servidor
+                Copias de Seguridad Automáticas en el Servidor
             </h3>
             <small style="color: #666;">
                 Frecuencia: <strong>Cada mes</strong> &bull; Política de retención: <strong>Máximo 10 copias</strong> (al llegar a 11, se borra automáticamente la más antigua).
@@ -273,12 +283,11 @@ $totalStored = count($storedBackups);
     </div>
 
     <div style="background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 12px 15px; border-radius: 6px; font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5;">
-        ℹ <strong>Automatización Mensual:</strong> El sistema genera automáticamente una copia de respaldo completa el 1º de cada mes. Cuando la carpeta alcanza las <strong>10 copias</strong>, el sistema elimina automáticamente la más antigua para mantener siempre disponible el historial de los últimos 10 meses sin saturar el espacio en disco.
+        <strong>Automatización Mensual:</strong> El sistema genera automáticamente una copia de respaldo completa el 1º de cada mes. Cuando la carpeta alcanza las <strong>10 copias</strong>, el sistema elimina automáticamente la más antigua para mantener siempre disponible el historial de los últimos 10 meses sin saturar el espacio en disco.
     </div>
 
     <?php if (empty($storedBackups)): ?>
         <div style="text-align: center; padding: 35px 15px; color: #777; background: #fafafa; border-radius: 6px; border: 1px dashed var(--color-border);">
-            <div style="font-size: 2.2rem; margin-bottom: 10px;">📭</div>
             <p style="margin: 0 0 5px 0; font-size: 1rem; font-weight: 500; color: #475569;">No hay copias de seguridad almacenadas todavía en el servidor.</p>
             <small style="color: #94a3b8;">Se creará una copia automáticamente al inicio de cada mes, o puedes hacer clic en <strong>"Crear Respaldo Ahora"</strong>.</small>
         </div>
@@ -335,5 +344,106 @@ $totalStored = count($storedBackups);
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Modal / Overlay de Carga durante la importación o restauración -->
+<div id="importLoadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
+    <div style="background: white; border-radius: 8px; padding: 32px 40px; max-width: 480px; width: 90%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);">
+        <div class="db-spinner" style="width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top-color: #0288d1; border-radius: 50%; margin: 0 auto 20px auto; animation: dbToolsSpin 0.85s linear infinite;"></div>
+        <h3 id="importLoadingTitle" style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.25rem;">Procesando Base de Datos...</h3>
+        <p id="importLoadingMsg" style="margin: 0 0 16px 0; color: #475569; font-size: 0.92rem; line-height: 1.5;">
+            Por favor, espere unos momentos mientras se leen y ejecutan las sentencias SQL.
+        </p>
+        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; color: #64748b;">
+            No cierre, refresque ni navegue fuera de esta página hasta que la operación termine.
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes dbToolsSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('importLoadingOverlay');
+    var titleEl = document.getElementById('importLoadingTitle');
+    var msgEl = document.getElementById('importLoadingMsg');
+    var formImport = document.getElementById('formImportDb');
+    var btnSubmitImport = document.getElementById('btnSubmitImport');
+
+    function showLoading(title, message) {
+        if (titleEl && title) titleEl.textContent = title;
+        if (msgEl && message) msgEl.textContent = message;
+        if (overlay) overlay.style.display = 'flex';
+    }
+
+    if (formImport) {
+        formImport.onsubmit = function(e) {
+            var fileInput = document.getElementById('sqlFile');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                alert('Por favor, selecciona un archivo SQL (.sql) antes de importar.');
+                return false;
+            }
+
+            var confirmed = confirm('¿Está COMPLETAMENTE SEGURO de restaurar la base de datos?\n\nEsta acción reemplazará las tablas actuales con las del archivo seleccionado.');
+            if (!confirmed) {
+                return false;
+            }
+
+            showLoading('Importando y Restaurando Base de Datos...', 'El sistema está cargando el archivo SQL y ejecutando las sentencias en la base de datos. Por favor, espere...');
+
+            if (btnSubmitImport) {
+                btnSubmitImport.disabled = true;
+                btnSubmitImport.textContent = 'Importando... Por favor espere';
+                btnSubmitImport.style.opacity = '0.7';
+            }
+            return true;
+        };
+    }
+
+    // Formularios de restauración de copias almacenadas y creación manual
+    var forms = document.getElementsByTagName('form');
+    for (var i = 0; i < forms.length; i++) {
+        (function(f) {
+            var btnRestore = f.querySelector('button[name="restore_stored"]');
+            if (btnRestore) {
+                var prevOnsubmit = f.onsubmit;
+                f.onsubmit = function(e) {
+                    var ok = true;
+                    if (prevOnsubmit) {
+                        ok = prevOnsubmit.call(f, e);
+                    }
+                    if (ok !== false) {
+                        showLoading('Restaurando Copia de Seguridad...', 'Se está restaurando la base de datos al punto seleccionado. Por favor, espere...');
+                        btnRestore.disabled = true;
+                        btnRestore.textContent = 'Restaurando...';
+                    }
+                    return ok;
+                };
+            }
+
+            var btnCreateNow = f.querySelector('button[name="create_backup_now"]');
+            if (btnCreateNow) {
+                var prevOnsubmitNow = f.onsubmit;
+                f.onsubmit = function(e) {
+                    var ok = true;
+                    if (prevOnsubmitNow) {
+                        ok = prevOnsubmitNow.call(f, e);
+                    }
+                    if (ok !== false) {
+                        showLoading('Generando Copia de Seguridad...', 'El servidor está generando el volcado SQL completo de la base de datos. Por favor, espere...');
+                        btnCreateNow.disabled = true;
+                        btnCreateNow.textContent = 'Generando...';
+                    }
+                    return ok;
+                };
+            }
+        })(forms[i]);
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

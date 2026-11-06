@@ -124,6 +124,14 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         ?>
     </div>
 <?php endif; ?>
+<?php if (isset($_SESSION['error_msg'])): ?>
+    <div class="alert alert-warning" style="background-color: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; padding: 12px 16px; border-radius: 4px; margin-bottom: 15px; font-weight: 500;">
+        <?php 
+            echo htmlspecialchars($_SESSION['error_msg']); 
+            unset($_SESSION['error_msg']);
+        ?>
+    </div>
+<?php endif; ?>
 
 <!-- Buscador y Filtros -->
 <div class="search-filters-bar">
@@ -242,7 +250,11 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
             <td>
                 <a href="edit_book.php?id=<?php echo $libro['id']; ?>" class="btn btn-edit">Editar</a>
+                <?php if ($libro['estado'] === 'Prestado'): ?>
+                <a href="javascript:void(0);" class="btn btn-delete" style="opacity: 0.65; cursor: not-allowed;" onclick="alert('No se puede eliminar el libro \'<?php echo addslashes($libro['titulo']); ?>\' porque actualmente se encuentra prestado. Primero debes registrar su devolución en el módulo de Préstamos.'); return false;" title="Libro en préstamo activo - No se puede eliminar">Borrar</a>
+                <?php else: ?>
                 <a href="delete_book.php?id=<?php echo $libro['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Estás seguro de eliminar este libro?');">Borrar</a>
+                <?php endif; ?>
             </td>
             <?php endif; ?>
         </tr>

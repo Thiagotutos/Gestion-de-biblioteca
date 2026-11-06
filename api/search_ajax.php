@@ -187,7 +187,11 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
         if ($user_role !== 'Lector') {
             echo '<td>';
             echo '<a href="edit_book.php?id=' . $libro['id'] . '" class="btn btn-edit">Editar</a> ';
-            echo '<a href="delete_book.php?id=' . $libro['id'] . '" class="btn btn-delete" onclick="return confirm(\'¿Estás seguro de eliminar este libro?\');">Borrar</a>';
+            if ($libro['estado'] === 'Prestado') {
+                echo '<a href="javascript:void(0);" class="btn btn-delete" style="opacity: 0.65; cursor: not-allowed;" onclick="alert(\'No se puede eliminar este libro porque actualmente se encuentra prestado. Primero debes registrar su devolución en el módulo de Préstamos.\'); return false;" title="Libro en préstamo activo - No se puede eliminar">Borrar</a>';
+            } else {
+                echo '<a href="delete_book.php?id=' . $libro['id'] . '" class="btn btn-delete" onclick="return confirm(\'¿Estás seguro de eliminar este libro?\');">Borrar</a>';
+            }
             echo '</td>';
         }
         echo '</tr>';

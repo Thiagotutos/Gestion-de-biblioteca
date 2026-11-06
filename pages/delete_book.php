@@ -21,8 +21,18 @@ if ($id) {
 
         if ($book) {
             // Regla de negocio: No permitir eliminar libros en préstamo activo
-            if ($book['estado'] === 'Prestado') {
-                $_SESSION['error_msg'] = "No puedes eliminar el libro '{$book['titulo']}' porque actualmente está prestado a un alumno. Primero registra su devolución.";
+            $isBorrowed = ($book['estado'] === 'Prestado');
+            if (!$isBorrowed) {
+                // Verificar si hay préstamos activos en la tabla de transacciones
+                $stmt_loan = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE book_id = ? AND accion = 'Prestamo' AND fecha_devolucion_real IS NULL");
+                $stmt_loan->execute([$id]);
+                if ((int)$stmt_loan->fetchColumn() > 0) {
+                    $isBorrowed = true;
+                }
+            }
+
+            if ($isBorrowed) {
+                $_SESSION['error_msg'] = "No se puede eliminar el libro '{$book['titulo']}' porque actualmente se encuentra prestado a un alumno o lector. Primero debes registrar su devolución en el módulo de Préstamos.";
             } else {
                 // Eliminar imagen del disco solo si ningún otro libro la está utilizando (ej: copias/donaciones compartidas)
                 if (!empty($book['imagen'])) {
