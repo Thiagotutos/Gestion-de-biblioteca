@@ -27,6 +27,15 @@
 ## 🧭 Índice General
 1. [🎓 Cuadrante 1: Tutoriales (Tutorials / Getting Started)](#-cuadrante-1-tutoriales-tutorials)
 2. [🛠️ Cuadrante 2: Guías Prácticas (How-to Guides)](#️-cuadrante-2-guías-prácticas-how-to-guides)
+   - [2.1 ¿Cómo registrar un nuevo libro en el catálogo?](#guía-21-cómo-registrar-un-nuevo-libro-en-el-catálogo)
+   - [2.2 ¿Cómo registrar un préstamo, renovarlo y procesar su devolución?](#guía-22-cómo-registrar-un-préstamo-renovarlo-y-procesar-su-devolución)
+   - [2.3 ¿Cómo ejecutar la migración masiva de catálogos (Aguapay / ISO 2709)?](#guía-23-cómo-ejecutar-la-migración-masiva-de-catálogos-aguapay--iso-2709)
+   - [2.4 ¿Cómo crear y administrar usuarios con roles diferenciados (RBAC)?](#guía-24-cómo-crear-y-administrar-usuarios-con-roles-diferenciados-rbac)
+   - [2.5 ¿Cómo exportar y restaurar copias de seguridad de la base de datos? (Protocolo y Advertencias)](#guía-25-cómo-exportar-y-restaurar-copias-de-seguridad-de-la-base-de-datos)
+   - [2.6 ¿Cómo editar Autores, Editoriales y Categorías sin eliminarlos?](#guía-26-cómo-editar-autores-editoriales-y-categorías-sin-eliminarlos)
+   - [2.7 ¿Cómo alojar el sistema en servidor Nginx y acceder desde cualquier PC por WiFi?](#guía-27-cómo-alojar-el-sistema-en-servidor-nginx-y-acceder-desde-cualquier-pc-por-wifi)
+   - [2.8 ¿Cómo realizar búsquedas instantáneas en tiempo real y filtrar el catálogo?](#guía-28-cómo-realizar-búsquedas-instantáneas-en-tiempo-real-y-filtrar-el-catálogo)
+   - [2.9 Solución a Fallas y Problemas Comunes (Troubleshooting)](#guía-29-solución-a-fallas-y-problemas-comunes-troubleshooting)
 3. [📖 Cuadrante 3: Referencia Técnica (Reference)](#-cuadrante-3-referencia-técnica-reference)
    - [3.1 Requisitos Funcionales y No Funcionales](#31-requisitos-funcionales-y-no-funcionales)
    - [3.2 Matriz de Trazabilidad de Requisitos](#32-matriz-de-trazabilidad-de-requisitos)
@@ -100,6 +109,11 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
 *Orientadas a resolver problemas o tareas concretas de forma concisa y directa.*
 
 ### Guía 2.1: ¿Cómo registrar un nuevo libro en el catálogo?
+> [!TIP]
+> **Espacio reservado para captura de pantalla de la interfaz:**
+> ![Formulario de Alta de Libros y Ejemplares](docs/img/captura_alta_libro.png)
+> *(Captura recomendada: vista completa de `pages/add_book.php` mostrando los campos de título, autor, cantidad de ejemplares, signatura, ISBN editorial y autocompletado en tiempo real).*
+
 1. Inicia sesión con rol **Administrador** o **Bibliotecario**.
 2. Dirígete a la sección **Libros** o accede a [`pages/add_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/add_book.php).
 3. Completa los campos del formulario:
@@ -107,10 +121,12 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
    - **Autor\***: Buscador en tiempo real. Escribe para autocompletar; si el autor no existe, se creará automáticamente al guardar.
    - **Cantidad de Ejemplares (Copias)\***: Permite ingresar múltiples copias de una misma obra (ideal para donaciones o compras de varios ejemplares iguales).
    - **N° de Inventario / ISBN\***: El sistema calcula y pre-completa automáticamente el siguiente número de inventario correlativo disponible respecto al último registrado en la base de datos (evitando colisiones o duplicados). Si se tipea un número, el validador en tiempo real comprueba si está libre o en uso.
+   - **Signatura Topográfica (opcional)**: Código de clasificación según CDU y ubicación (ej. *001 SAG*, *806.0-3 REA*).
+   - **ISBN Editorial (opcional)**: Código ISBN comercial internacional de la edición (ej. *84-08-01645-8*).
    - **Editorial**: Buscador en tiempo real. Si no existe, se creará automáticamente al guardar.
    - **Lugar de la Editorial**: Ciudad o país de publicación (ej. *Buenos Aires*, *Madrid*).
-   - **Fecha de Publicación**: Fecha en que fue publicado el libro.
-   - **Categoría**: Buscador en tiempo real (ej. *Literatura*, *Historia*). Si no existe, se creará automáticamente al guardar.
+   - **Fecha de Publicación**: Fecha en que fue publicado el libro (bloquea fechas futuras).
+   - **Materia / Categoría**: Buscador en tiempo real (ej. *Literatura*, *Historia*). Si no existe, se creará automáticamente al guardar.
    - **Portada**: Imagen de portada (`.jpg`, `.png`, `.webp`, `.gif`) almacenada en [`uploads/books/`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/uploads/books).
    - **Notas (opcional)**: Notas internas de catalogación o estado del ejemplar.
    - **Observación (opcional)**: Observaciones complementarias sobre el libro.
@@ -118,6 +134,11 @@ php -S localhost:8000 -t "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-d
 4. Haz clic en **"Guardar Libro"** (o **"Guardar N Ejemplares"**).
 
 ### Guía 2.2: ¿Cómo registrar un préstamo, renovarlo y procesar su devolución?
+> [!TIP]
+> **Espacio reservado para captura de pantalla de la interfaz:**
+> ![Módulo de Préstamos y Devoluciones](docs/img/captura_prestamos_libros.png)
+> *(Captura recomendada: vista de `pages/issue_books.php` con el selector reactivo de libros y la tabla de préstamos activos con turnos, cursos y botones de devolución).*
+
 #### Para prestar un libro:
 1. Accede a [`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php).
 2. En la sección **"Registrar Préstamo"**:
@@ -156,21 +177,76 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
 3. Haz clic en **"Crear Usuario"**.
 
 ### Guía 2.5: ¿Cómo exportar y restaurar copias de seguridad de la base de datos?
+> [!TIP]
+> **Espacio reservado para captura de pantalla de la interfaz:**
+> ![Panel de Respaldo y Restauración de Base de Datos](docs/img/captura_respaldo_bd.png)
+> *(Captura recomendada: vista completa de `pages/db_tools.php` mostrando la tarjeta de exportación, la tarjeta de importación con selector de archivos y la lista de respaldos automáticos almacenados).*
+
+> [!WARNING]
+> **ADVERTENCIA CRÍTICA DE SEGURIDAD PREVIA A LA RESTAURACIÓN**:
+> La restauración de una base de datos es una operación **destructiva e irreversible**. Al restaurar un archivo SQL, el motor ejecutará sentencias `DROP TABLE IF EXISTS` que **eliminarán por completo las tablas y registros actuales** (catálogo de libros, cuentas de usuarios, autores, clasificaciones temáticas y préstamos en curso) para sustituirlos por el contenido del archivo suministrado.
+> 
+> **Protocolo Preventivo Obligatorio:**
+> 1. **Copia de Resguardo Previa**: Antes de proceder con cualquier restauración, genere y descargue siempre un respaldo del estado actual presionando **"Crear Respaldo Ahora"** o **"Descargar Volcado SQL Completo"**.
+> 2. **Verificación de Origen**: Asegúrese de que el archivo `.sql` provenga de una fuente fidedigna y corresponda a la estructura del sistema de biblioteca (`library_system`).
+> 3. **Aislamiento de Operaciones**: Notifique a las demás terminales de la biblioteca que suspendan temporalmente la carga de préstamos o devoluciones durante el proceso de restauración para evitar colisiones de concurrencia.
+
+#### Procedimiento para Exportar (Descargar Respaldo):
 1. Inicia sesión como **Administrador** y dirígete a la pestaña **Respaldo BD** en la barra lateral ([`pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php)).
-2. **Para Exportar (Descargar Backup)**:
-   - Haz clic en **"📥 Descargar Copia de Seguridad (.sql)"**.
-   - El sistema generará y descargará un volcado SQL estructurado (`backup_library_system_YYYY-MM-DD_HH-mm-ss.sql`) con todas las tablas, relaciones y datos de la biblioteca.
-3. **Para Restaurar (Importar Backup)**:
-   - En la tarjeta **Restaurar Base de Datos**, presiona **"Seleccionar Archivo SQL"** y elige tu archivo `.sql`.
-   - Marca la casilla de confirmación: *"Entiendo los riesgos y confirmo que deseo restaurar la base de datos"*.
-   - Presiona **"📤 Importar Datos / Restaurar Base de Datos"** y confirma en el cuadro de diálogo.
-   - El sistema ejecutará las sentencias SQL mediante lectura eficiente por flujo (streaming de bajo consumo en RAM < 4MB), deshabilitando temporalmente las claves foráneas para preservar integridad y notificando la cantidad de sentencias ejecutadas. Soporta respaldos de gran volumen (hasta 256MB).
+2. En la sección **Exportar Base de Datos**, haz clic en **"Descargar Copia de Seguridad (.sql)"** (para descarga inmediata a tu equipo) o en **"Crear Respaldo Ahora"** (para almacenarlo en el servidor).
+3. El sistema generará un volcado SQL estructurado (`backup_library_system_YYYY-MM-DD_HH-mm-ss.sql`) con todas las tablas, relaciones y datos de la biblioteca.
+
+#### Procedimiento para Restaurar (Importar Respaldo):
+1. En la tarjeta **Importar Datos / Restaurar Base de Datos**, haz clic en **"Seleccionar Archivo (.sql)"** y escoge el archivo correspondiente en tu computadora.
+2. Marca obligatoriamente la casilla de confirmación de seguridad: *"Entiendo los riesgos y confirmo que deseo restaurar la base de datos"*.
+3. Presiona el botón rojo **"Importar Datos / Restaurar Base de Datos"** y acepta la confirmación del navegador.
+4. **Indicador de Carga y Bloqueo:** El sistema desplegará automáticamente un overlay modal con animación de carga (*spinner*) y el mensaje *"Importando y Restaurando Base de Datos... Por favor, espere"*, deshabilitando el botón de envío para impedir pulsaciones duplicadas mientras se procesa la información.
+5. Al concluir, el sistema notificará el número total de sentencias SQL ejecutadas satisfactoriamente y actualizará los contadores de la biblioteca.
+
+#### Protocolo de Contingencia: ¿Qué hacer ante un fallo durante la carga de un archivo SQL extenso?
+Si al subir o procesar un archivo SQL de gran volumen (más de 10 MB o miles de registros) se presenta una interrupción, timeout o error:
+
+1. **Fallo de Límite de Tamaño HTTP o Timeout (HTTP 413, HTTP 504 o recarga en blanco):**
+   - **Causa**: PHP o el servidor web (Nginx/Apache) tienen directivas que restringen el tamaño de subida o cortan la conexión antes de terminar.
+   - **Medida en Nginx**: Verificar en la configuración (`/etc/nginx/sites-available/default` o `deploy/nginx.conf`) la directiva `client_max_body_size 256M;` y reiniciar con `sudo systemctl restart nginx`.
+   - **Medida en PHP**: En el archivo `php.ini` comprobar que los siguientes valores estén configurados:
+     ```ini
+     upload_max_filesize = 256M
+     post_max_size = 256M
+     memory_limit = 512M
+     max_execution_time = 600
+     ```
+     Luego reiniciar PHP-FPM: `sudo systemctl restart php8.2-fpm`.
+2. **Fallo de Paquete en MySQL / MariaDB (`Error #1153 - Got a packet bigger than 'max_allowed_packet'`):**
+   - **Causa**: El volcado SQL incluye bloques de inserción masiva (`INSERT INTO ... VALUES (...)`) que exceden el búfer máximo de red de MySQL.
+   - **Medida Inmediata (sin reiniciar base de datos)**: Conéctate a MySQL como root y ejecuta:
+     ```sql
+     SET GLOBAL max_allowed_packet = 134217728; -- Eleva a 128 MB
+     ```
+   - **Medida Permanente**: Edita el archivo `my.ini` (en XAMPP) o `/etc/mysql/mariadb.conf.d/50-server.cnf` (en Linux/Debian) y coloca bajo la sección `[mysqld]`:
+     ```ini
+     max_allowed_packet = 128M
+     ```
+3. **Fallo de Claves Foráneas (`Error #1451 - Cannot delete or update a parent row: foreign key constraint fails`):**
+   - **Causa**: Ocurre principalmente si se intenta importar el archivo mediante clientes externos (como phpMyAdmin) que tienen activada la revisión estricta de claves foráneas entre `transactions` y `users`.
+   - **Medida**: En nuestra herramienta web [`pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php), la instrucción `SET FOREIGN_KEY_CHECKS = 0;` se ejecuta en streaming automáticamente antes de procesar el archivo. Si utilizas phpMyAdmin, **desmarca la casilla "Habilite la revisión de las claves foráneas"** antes de ejecutar la consulta.
+4. **Plan de Contingencia Alternativo por Consola (CLI - Inmune a Caídas de Red):**
+   - Si la conexión del navegador es inestable o el archivo supera los límites web, ejecute la restauración directamente desde la terminal del sistema operativo:
+     ```bash
+     # En Servidor Linux / Debian:
+     mysql -u root -p library_system < /var/www/Gestion-de-biblioteca/database/database_produccion.sql
+
+     # En Windows (PowerShell con XAMPP):
+     c:\xampp\mysql\bin\mysql.exe -u root library_system < "c:\xampp\htdocs\x\Gestion-de-biblioteca\database\database.sql"
+     ```
+5. **Comprobación de Integridad Post-Restauración:**
+   - Acceda al Catálogo de Libros ([`pages/books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/books.php)) y al Dashboard para constatar que el recuento de títulos, autores y usuarios coincida con el esperado.
 
 ### Guía 2.6: ¿Cómo editar Autores, Editoriales y Categorías sin eliminarlos?
 1. Dirígete a la sección correspondiente en el menú lateral:
    - **Autores** ([`pages/authors.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/authors.php))
    - **Editoriales** ([`pages/publishers.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/publishers.php))
-   - **Categorías** ([`pages/categories.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/categories.php))
+   - **Categorías / Materias** ([`pages/categories.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/categories.php))
 2. En la tabla de registros (o utilizando el buscador en tiempo real), localiza el registro deseado y presiona el botón naranja **"Editar"**.
 3. El formulario lateral izquierdo cambiará automáticamente a modo de edición, mostrando el ID y el nombre actual.
 4. Corrige el texto en el campo de nombre y presiona **"Actualizar"** (o **"Cancelar"** para descartar).
@@ -193,6 +269,129 @@ php "c:\xampp\htdocs\x\Gestion-de-biblioteca-main\Gestion-de-biblioteca-main\scr
    http://192.168.1.150/
    ```
    - ¡Listo! Podrás iniciar sesión con las credenciales de administrador (`admin@biblioteca.com` / `admin123`) y operar la biblioteca de manera simultánea desde varias estaciones de trabajo.
+
+### Guía 2.8: ¿Cómo realizar búsquedas instantáneas en tiempo real y filtrar el catálogo?
+*Instructivo paso a paso para el usuario final (Bibliotecarios, Docentes, Alumnos y Administradores).*
+
+> [!TIP]
+> **Espacio reservado para captura de pantalla de la interfaz:**
+> ![Buscador y Filtros de Catálogo](docs/img/captura_buscador_catalogo.png)
+> *(Captura recomendada: barra superior de búsqueda de `pages/books.php` con los selectores "Buscar por:", "Estado:" y la caja de texto en tiempo real).*
+
+El catálogo bibliográfico cuenta con un motor de búsqueda reactivo de respuesta ultrarrápida (latencia inferior a 200 ms) que actualiza los resultados de forma automática mientras el usuario escribe, sin necesidad de presionar la tecla Enter ni recargar la página.
+
+#### Paso 1: Acceder al Catálogo de Libros
+- En la barra de navegación lateral izquierda, haz clic en **"Gestionar Libros"** o **"Libros"** ([`pages/books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/books.php)).
+
+#### Paso 2: Seleccionar el Criterio de Búsqueda
+En el menú desplegable **"Buscar por:"**, puedes acotar la búsqueda a un campo específico o realizar un rastreo global:
+- **Todos los campos** *(Recomendado para búsquedas rápidas)*: Escanea simultáneamente coincidencias en título, autor, signatura topográfica, ISBN editorial y notas.
+- **Título**: Busca exclusivamente por palabras contenidas en el título de la obra.
+- **Autor**: Localiza ejemplares por apellido o nombre del autor.
+- **Signatura / Ubicación**: Localiza por la clasificación topográfica (sistema CDU y ubicación física en estante, ej. `001 SAG`, `806.0-3 REA`).
+- **ISBN Editorial**: Busca por el código ISBN comercial internacional de la edición (ej. `84-08-01645-8`).
+- **N° de Inventario**: Localiza por el número patrimonial correlativo único del ejemplar registrado en la biblioteca (ej. `005928`).
+
+#### Paso 3: Filtrar por Estado de Circulación
+A la derecha del criterio, utiliza el selector **"Estado:"** para filtrar según la situación del libro:
+- **Todos**: Muestra el catálogo completo independientemente de su estado.
+- **Disponible**: Filtra únicamente los ejemplares que se encuentran físicamente en la biblioteca y están listos para ser leídos o prestados.
+- **Prestado**: Lista exclusivamente los libros que actualmente han sido otorgados en préstamo a estudiantes o docentes.
+- **Extraviado**: Muestra ejemplares dados de baja o en proceso de reposición.
+
+#### Paso 4: Escribir el Término de Búsqueda (Tiempo Real)
+1. Haz clic en la caja de texto **"Escribe para buscar..."**.
+2. Escribe una o varias palabras clave (ej: *"física"*, *"García Márquez"*, *"001 SAG"*).
+3. **Comportamiento Reactivo (*Debounce*):** No es necesario presionar ningún botón. El sistema espera 200 milisegundos desde la última tecla presionada y envía una consulta asíncrona por detrás. La tabla de libros se actualizará instantáneamente con los primeros 25 resultados que coincidan.
+
+> [!TIP]
+> **Espacio reservado para captura de pantalla de resultados:**
+> ![Resultados de Búsqueda y Paginación Instantánea](docs/img/captura_resultados_busqueda.png)
+> *(Captura recomendada: tabla de resultados con celdas de Signatura, Título, Materia, Autor, Estado badge y paginación inferior).*
+
+#### Paso 5: Interpretar la Tabla de Resultados y Acciones
+- **Portada**: Miniatura de la cubierta del libro (o imagen genérica si no posee).
+- **Inventario / ISBN**: N° patrimonial correlativo y código ISBN de la edición.
+- **Signatura**: Ubicación topográfica en la estantería física de la biblioteca.
+- **Título / Materia**: Nombre completo de la obra y su clasificación temática.
+- **Autor**: Autor principal del ejemplar.
+- **Estado**: Etiqueta visual indicativa (`Disponible` en verde, `Prestado` en amarillo/naranja, `Extraviado` en rojo).
+- **Acciones (solo Bibliotecarios y Administradores)**:
+  - Botón azul **"Editar"**: Modifica los metadatos del libro en [`pages/edit_book.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/edit_book.php).
+  - Botón rojo **"Borrar"**: Elimina el libro del catálogo tras confirmación. *(Nota: Si el libro está prestado, el botón se bloquea automáticamente para proteger la integridad del préstamo).*
+
+#### Paso 6: Paginación y Restablecimiento
+- En la zona inferior de la tabla se indica el recuento total de libros coincidentes y los controles de paginación (`« Anterior` / `Siguiente »`).
+- Para volver a ver todo el catálogo, simplemente borra el texto de la caja de búsqueda o haz clic en el logotipo de la biblioteca.
+
+---
+
+### Guía 2.9: Solución a Fallas y Problemas Comunes (Troubleshooting)
+*Guía de diagnóstico y resolución rápida para usuarios finales y administradores del sistema.*
+
+#### 1. Falla de Permisos al Generar Respaldo en Servidor Linux/Debian
+- **Síntoma / Mensaje de Error:**
+  `Error al generar respaldo: No se pudo abrir el archivo de destino para escritura.`
+- **Causa Raíz:** En servidores Linux, el proceso web (Nginx / PHP-FPM) corre bajo el usuario del sistema `www-data`. Si la carpeta `backups/` fue clonada o creada por el usuario `debian`, `www-data` no tiene permisos para crear o escribir archivos `.sql`.
+- **Solución Rápida:** Conéctate por SSH al servidor y ejecuta:
+  ```bash
+  sudo mkdir -p /var/www/Gestion-de-biblioteca/backups
+  sudo chown -R www-data:www-data /var/www/Gestion-de-biblioteca/backups
+  sudo chmod -R 777 /var/www/Gestion-de-biblioteca/backups
+  ```
+
+#### 2. Falla en `git pull` por Modificación Local en `config.php`
+- **Síntoma / Mensaje de Error:**
+  `error: Los cambios locales de los siguientes archivos serán sobrescritos al fusionar: config.php`
+  `Por favor, confirma tus cambios o aguárdalos antes de fusionar. Abortando.`
+- **Causa Raíz:** En el servidor Debian se personalizaron credenciales de MySQL (usuario o contraseña) en `config.php`. Git protege los cambios locales impidiendo que la nueva versión del repositorio los sobreescriba.
+- **Solución Rápida:** Guarda tus cambios temporalmente en el baúl de Git, descarga la última versión y vuelve a aplicar tu configuración local:
+  ```bash
+  cd /var/www/Gestion-de-biblioteca
+  git stash
+  git pull origin main
+  git stash pop
+  ```
+
+#### 3. Error `#1451` al Importar Base de Datos en phpMyAdmin
+- **Síntoma / Mensaje de Error:**
+  `#1451 - No puede deletar una línea padre: falla de clave extranjera constraint`
+  `DROP TABLE IF EXISTS users;`
+- **Causa Raíz:** La tabla de transacciones de préstamos (`transactions`) posee una clave foránea referenciando a `users`. Si se ejecuta la sentencia de borrado con la validación de claves foráneas activa, MySQL bloquea el comando para evitar dejar registros huérfanos.
+- **Solución Rápida:**
+  - **En phpMyAdmin**: Antes de presionar **"Continuar"**, desmarca la casilla **"Habilite la revisión de las claves foráneas"** (ubicada justo arriba del botón Continuar).
+  - **Desde la Aplicación**: Utiliza directamente el módulo [`pages/db_tools.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/db_tools.php), el cual ejecuta automáticamente `SET FOREIGN_KEY_CHECKS = 0;` en el flujo de importación.
+
+#### 4. Error `#1153` por Tamaño de Paquete en MySQL (`max_allowed_packet`)
+- **Síntoma / Mensaje de Error:**
+  `MySQL ha dicho: #1153 - Obtenido un paquete mayor que 'max_allowed_packet'`
+- **Causa Raíz:** El archivo `.sql` contiene sentencias `INSERT` compuestas con cientos de registros que sobrepasan el tamaño del búfer configurado por defecto en MySQL (16 MB).
+- **Solución Rápida:**
+  - Abre la consola de MySQL o phpMyAdmin y ejecuta:
+    ```sql
+    SET GLOBAL max_allowed_packet = 134217728; -- Configura 128 MB
+    ```
+  - Para persistirlo de forma definitiva, coloca en tu archivo `my.ini` (XAMPP) o `my.cnf` (Linux) bajo `[mysqld]`: `max_allowed_packet = 128M`.
+
+#### 5. ¿Por qué no puedo eliminar un libro del catálogo?
+- **Síntoma / Mensaje de Error:**
+  `No se puede eliminar el libro '...' porque actualmente se encuentra prestado a un alumno o lector. Primero debes registrar su devolución en el módulo de Préstamos.`
+- **Causa Raíz:** Aplicación estricta de la regla de negocio **RN-09**. El sistema prohíbe taxativamente la eliminación física de cualquier libro que tenga un préstamo abierto o mantenga el estado `'Prestado'`.
+- **Solución:**
+  1. Dirígete al módulo de **Préstamos** ([`pages/issue_books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/issue_books.php)).
+  2. Localiza el ejemplar en la tabla de **Libros Actualmente Prestados**.
+  3. Haz clic en el botón verde **"Devolver"**.
+  4. Una vez restituido a estado `'Disponible'`, regresa al catálogo y podrás eliminarlo normalmente si así se requiere.
+
+#### 6. Iconos Aparecen como Rectángulos Vacíos `[]` en Computadoras Antiguas
+- **Síntoma:** En equipos con Windows 7, Windows 8 o navegadores antiguos en la biblioteca, los botones mostraban rectángulos en lugar de iconos.
+- **Causa Raíz:** Las versiones heredadas del sistema operativo carecen de soporte nativo para la tipografía de emojis modernos de Unicode.
+- **Solución Implementada:** El sistema eliminó la dependencia de emojis gráficos y utiliza botones semánticos universales en CSS y texto plano (`Editar`, `Borrar`, `Devolver`, `Renovar`), garantizando compatibilidad retroactiva completa sin degradación visual.
+
+#### 7. El Buscador no Muestra Resultados o no Responde al Escribir
+- **Síntoma:** Al escribir en la caja de búsqueda, la tabla queda congelada o no refleja cambios recientes.
+- **Causa Raíz:** Memoria caché estática acumulada en el navegador web local.
+- **Solución:** Presiona la combinación de teclas **`Ctrl + F5`** (en Windows/Linux) o **`Cmd + Shift + R`** (en macOS) para forzar la recarga limpia de los scripts JavaScript y hojas de estilo.
 
 ---
 
@@ -388,6 +587,12 @@ El diseño del sistema responde a una premisa de **eficiencia máxima con depend
 6. **RN-06 (Validación Estricta de Formato de Documento / DNI)**: El documento de identidad ingresado en los préstamos es saneado y validado para aceptar exclusivamente entre 7 y 8 dígitos numéricos (patrón `/^[0-9]{7,8}$/`), previniendo caracteres extraños, espacios o longitudes desproporcionadas tanto en el cliente como en la transacción del servidor.
 7. **RN-07 (Validación Estricta de Usuarios y Credenciales)**: El nombre de usuario solo acepta caracteres alfabéticos, espacios y acentos (longitud entre 3 y 60 caracteres), impidiendo símbolos especiales como `@, #, $, %, etc.`; el correo electrónico debe cumplir formato RFC con dominio y TLD válido (máx. 80 caracteres), incorporando validación de dominio con detección de errores tipográficos en proveedores comunes (bloqueo y sugerencia de corrección para errores como `@gma.com` -> `@gmail.com`, `@hotm.com` -> `@hotmail.com`, `@outlok.com` -> `@outlook.com`) y verificación de registros de correo en dominios personalizados; y la contraseña debe poseer una longitud segura entre 6 y 30 caracteres.
 8. **RN-08 (Validación Cronológica de Publicación)**: La fecha de publicación de un libro no puede ser posterior a la fecha actual (`CURRENT_DATE`), bloqueando fechas futuras tanto en la interfaz de usuario como en el procesamiento del servidor para preservar la coherencia bibliográfica.
+9. **RN-09 (Bloqueo Estricto de Eliminación de Ejemplares en Préstamo Activo)**:
+   - **Contexto y Regla**: Ningún libro que se encuentre en circulación activa puede ser eliminado física ni lógicamente de la base de datos mientras no haya sido restituido a las instalaciones de la biblioteca.
+   - **Mecanismo de Doble Barrera**:
+     - *Barrera en Interfaz (Frontend)*: En la vista de catálogo ([`pages/books.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/books.php)) y en los resultados dinámicos ([`api/search_ajax.php`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/api/search_ajax.php)), si un ejemplar tiene estado `'Prestado'`, el botón "Borrar" se presenta visualmente atenuado (`opacity: 0.65; cursor: not-allowed;`) y neutraliza el evento de eliminación, disparando una notificación inmediata: *"No se puede eliminar el libro porque actualmente se encuentra prestado. Primero debes registrar su devolución en el módulo de Préstamos."*
+     - *Barrera en Servidor (Backend)*: Si un usuario intenta forzar la acción mediante acceso directo a [`pages/delete_book.php?id=X`](file:///c:/xampp/htdocs/x/Gestion-de-biblioteca-main/Gestion-de-biblioteca-main/pages/delete_book.php), el script comprueba obligatoriamente dos factores: (1) si el estado del libro es `'Prestado'`, o (2) si existe en la tabla `transactions` un préstamo activo (`accion = 'Prestamo' AND fecha_devolucion_real IS NULL`). Si cualquiera de las dos condiciones se verifica, el controlador cancela la operación de forma atómica, no remueve la imagen del disco ni altera la base de datos, y redirige a la vista de libros desplegando un banner de advertencia (`$_SESSION['error_msg']`).
+   - **Trazabilidad y Auditoría**: Esta regla garantiza que el historial forense de transacciones no quede huérfano y que ningún lector figure como depositario de un ejemplar inexistente en el catálogo.
 
 ---
 
