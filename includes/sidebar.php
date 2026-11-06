@@ -13,7 +13,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <a href="books.php" class="<?php echo (in_array($current_page, ['books.php', 'add_book.php', 'edit_book.php'])) ? 'active' : ''; ?>">Libros ▾</a>
                     <ul class="sub-menu">
                         <li><a href="books.php" class="<?php echo ($current_page == 'books.php') ? 'active' : ''; ?>">Gestionar Libros</a></li>
-                        <li><a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">Categorías</a></li>
+                        <li><a href="categories.php" class="<?php echo ($current_page == 'categories.php') ? 'active' : ''; ?>">Materias</a></li>
                         <li><a href="authors.php" class="<?php echo ($current_page == 'authors.php') ? 'active' : ''; ?>">Autores</a></li>
                         <li><a href="publishers.php" class="<?php echo ($current_page == 'publishers.php') ? 'active' : ''; ?>">Editoriales</a></li>
                     </ul>

@@ -335,8 +335,8 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
         <form method="POST" id="formIssueBook">
             <!-- Buscador predictivo de libros -->
             <div class="form-group" style="position: relative; margin-bottom: 12px;">
-                <label><strong>Buscar y Agregar Libro (Título, Autor, Categoría o Nº Inv.) *</strong></label>
-                <input type="text" id="bookSearchInput" class="form-control" placeholder="Buscar por título, autor, categoría o Nº de inventario..." autocomplete="off">
+                <label><strong>Buscar y Agregar Libro (Título, Autor, Materia, Signatura o Nº Inv.) *</strong></label>
+                <input type="text" id="bookSearchInput" class="form-control" placeholder="Buscar por título, autor, materia, signatura, ISBN o Nº de inventario..." autocomplete="off">
                 <div id="bookSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; max-height:260px; overflow-y:auto; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;"></div>
             </div>
 
@@ -645,13 +645,19 @@ function renderSelectedBooks() {
         totalEjemplares += cant;
         const maxDisp = b.maxCopias || 1;
         const autorTxt = b.autor ? `<span style="color:#64748b; font-size:0.82rem; display:block;">${escapeHtml(b.autor)}</span>` : '';
+        const sigTxt = b.signatura ? `<span style="margin-left:8px; background:#eff6ff; color:#1d4ed8; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600;">🔖 ${escapeHtml(b.signatura)}</span>` : '';
+        const isbnTxt = b.isbn_editorial ? `<span style="margin-left:8px; font-size:0.75rem; color:#475569; font-family:monospace;">ISBN: ${escapeHtml(b.isbn_editorial)}</span>` : '';
 
         html += `
             <div class="selected-book-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid #cbd5e1; border-left:4px solid var(--color-primary); border-radius:6px; padding:10px 14px; flex-wrap:wrap;">
                 <div style="flex:1; min-width:200px;">
                     <strong style="color:#1e293b; font-size:0.95rem;">${escapeHtml(b.titulo)}</strong>
                     ${autorTxt}
-                    <span style="font-size:0.78rem; color:#0288d1; font-weight:600;">Nº Inv: ${escapeHtml(b.isbn || 'S/N')}</span>
+                    <div style="margin-top:2px;">
+                        <span style="font-size:0.78rem; color:#0288d1; font-weight:600;">Nº Inv: ${escapeHtml(b.isbn || 'S/N')}</span>
+                        ${sigTxt}
+                        ${isbnTxt}
+                    </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">
                     <label style="font-size:0.84rem; color:#475569; margin:0; font-weight:600; white-space:nowrap;">Copias:</label>
@@ -739,7 +745,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const copiasDisp = parseInt(book.copias_disponibles, 10) || 0;
                                 const isDisponible = (book.estado === 'Disponible');
                                 const autorTxt = book.autor ? ` — <span style="color:#475569;">${escapeHtml(book.autor)}</span>` : '';
-                                const catTxt = book.categoria ? `<span style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:4px; font-size:0.75rem; margin-left:6px;">${escapeHtml(book.categoria)}</span>` : '';
+                                const catTxt = book.categoria ? `<span style="background:#f1f5f9; color:#475569; padding:1px 6px; border-radius:4px; font-size:0.75rem; margin-left:6px;" title="Materia">${escapeHtml(book.categoria)}</span>` : '';
+                                const sigTxt = book.signatura ? `<span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-weight:600; margin-left:6px;">🔖 ${escapeHtml(book.signatura)}</span>` : '';
+                                const isbnTxt = book.isbn_editorial ? `<span style="background:#f8fafc; color:#334155; border:1px solid #e2e8f0; padding:1px 6px; border-radius:4px; font-size:0.75rem; font-family:monospace; margin-left:6px;">ISBN: ${escapeHtml(book.isbn_editorial)}</span>` : '';
                                 
                                 let badgeHtml = '';
                                 if (isDisponible) {
@@ -765,9 +773,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         ${catTxt}
                                         ${autorTxt}
                                     </div>
-                                    <div style="font-size:0.82rem; margin-top:3px; color:#64748b;">
-                                        Nº Inv: <strong style="color:${isDisponible ? '#0284c7' : '#991b1b'};">${escapeHtml(book.isbn || 'S/N')}</strong>
-                                        <span style="margin-left: 8px; color: #94a3b8;">ID: #${escapeHtml(book.id)}</span>
+                                    <div style="font-size:0.82rem; margin-top:3px; color:#64748b; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                        <span>Nº Inv: <strong style="color:${isDisponible ? '#0284c7' : '#991b1b'};">${escapeHtml(book.isbn || 'S/N')}</strong></span>
+                                        ${sigTxt}
+                                        ${isbnTxt}
+                                        <span style="color: #94a3b8;">ID: #${escapeHtml(book.id)}</span>
                                     </div>
                                 `;
                                 
@@ -788,6 +798,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                             titulo: book.titulo,
                                             autor: book.autor,
                                             isbn: book.isbn,
+                                            signatura: book.signatura,
+                                            isbn_editorial: book.isbn_editorial,
                                             maxCopias: copiasDisp,
                                             cantidad: 1
                                         };
@@ -801,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                             bookSearchResults.style.display = 'block';
                         } else {
-                            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros por título, autor, categoría o número de inventario.</div>';
+                            bookSearchResults.innerHTML = '<div style="padding:10px 14px; color:#666;">No se encontraron libros por título, autor, materia, signatura, ISBN o número de inventario.</div>';
                             bookSearchResults.style.display = 'block';
                         }
                     })

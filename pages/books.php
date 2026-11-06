@@ -35,6 +35,16 @@ if ($search !== '') {
             $where_clauses[] = "b.isbn LIKE ?";
             $params[] = $search_param;
             break;
+        case 'signatura':
+            $where_clauses[] = "(b.signatura LIKE ? OR b.observacion LIKE ?)";
+            $params[] = $search_param;
+            $params[] = $search_param;
+            break;
+        case 'isbn_editorial':
+            $where_clauses[] = "(b.isbn_editorial LIKE ? OR b.observacion LIKE ?)";
+            $params[] = $search_param;
+            $params[] = $search_param;
+            break;
         case 'category':
             $where_clauses[] = "c.name LIKE ?";
             $params[] = $search_param;
@@ -44,8 +54,8 @@ if ($search !== '') {
             $params[] = $search_param;
             break;
         default: // 'all'
-            $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
-            $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+            $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR b.signatura LIKE ? OR b.isbn_editorial LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ? OR b.observacion LIKE ?)";
+            $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
             break;
     }
 }
@@ -72,7 +82,7 @@ $total_pages = max(1, ceil($total / $per_page));
 
 // Obtener libros con paginación
 $query = "
-    SELECT b.id, b.titulo, b.isbn, b.estado, b.imagen, b.created_at,
+    SELECT b.id, b.titulo, b.isbn, b.signatura, b.isbn_editorial, b.estado, b.imagen, b.created_at,
            b.lugar_editorial, b.fecha_publicacion, b.notas, b.observacion,
            c.name as categoria, a.name as autor, p.name as editorial
     FROM books b
@@ -123,14 +133,16 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <option value="title" <?php echo $search_by === 'title' ? 'selected' : ''; ?>>📖 Título</option>
             <option value="author" <?php echo $search_by === 'author' ? 'selected' : ''; ?>>✍️ Autor</option>
             <option value="isbn" <?php echo $search_by === 'isbn' ? 'selected' : ''; ?>>🏷️ Nº Inventario</option>
-            <option value="category" <?php echo $search_by === 'category' ? 'selected' : ''; ?>>📂 Categoría</option>
+            <option value="signatura" <?php echo $search_by === 'signatura' ? 'selected' : ''; ?>>🔖 Signatura Topográfica</option>
+            <option value="isbn_editorial" <?php echo $search_by === 'isbn_editorial' ? 'selected' : ''; ?>>🔢 ISBN (Editorial)</option>
+            <option value="category" <?php echo $search_by === 'category' ? 'selected' : ''; ?>>📂 Materia</option>
             <option value="publisher" <?php echo $search_by === 'publisher' ? 'selected' : ''; ?>>🏢 Editorial</option>
         </select>
         <div class="search-input-wrapper">
             <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar por título, autor, inventario, categoría o editorial..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
+            <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar por título, autor, signatura, inventario, ISBN, materia o editorial..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
             <span id="searchSpinner" class="search-spinner" style="display:none;"></span>
         </div>
         <select name="filter" id="filterSelect" class="filter-select" title="Filtrar por estado">
@@ -155,8 +167,10 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <th>ID</th>
             <th>Libro</th>
             <th>Nº Inventario</th>
+            <th>Signatura</th>
+            <th>ISBN</th>
             <th>Autor</th>
-            <th>Categoría</th>
+            <th>Materia</th>
             <th>Editorial</th>
             <th>Estado</th>
             <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
@@ -166,12 +180,22 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
     </thead>
     <tbody>
         <?php foreach ($libros as $libro): ?>
+        <?php
+            $sig_val = !empty($libro['signatura']) ? $libro['signatura'] : '';
+            if ($sig_val === '' && !empty($libro['observacion']) && preg_match('/Signatura:\s*([^\|]+)/i', $libro['observacion'], $ms)) {
+                $sig_val = trim($ms[1]);
+            }
+            $isbn_val = !empty($libro['isbn_editorial']) ? $libro['isbn_editorial'] : '';
+            if ($isbn_val === '' && !empty($libro['observacion']) && preg_match('/ISBN:\s*([^\|]+)/i', $libro['observacion'], $mi)) {
+                $isbn_val = trim($mi[1]);
+            }
+        ?>
         <tr>
             <td><?php echo $libro['id']; ?></td>
             <td>
                 <div style="display: flex; align-items: center;">
                     <?php if (!empty($libro['imagen'])): ?>
-                        <img src="../uploads/books/<?php echo htmlspecialchars($libro['imagen']); ?>" alt="Portada" class="book-cover zoomable-image" style="object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openImageModal(this.src)">
+                        <img src="../uploads/books/' . htmlspecialchars($libro['imagen']); ?>" alt="Portada" class="book-cover zoomable-image" style="object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openImageModal(this.src)">
                     <?php else: ?>
                         <div class="book-cover book-cover-placeholder">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
@@ -194,7 +218,9 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
                     </div>
                 </div>
             </td>
-            <td><?php echo htmlspecialchars($libro['isbn'] ?? 'N/A'); ?></td>
+            <td><strong><?php echo htmlspecialchars($libro['isbn'] ?? 'N/A'); ?></strong></td>
+            <td><?php echo !empty($sig_val) ? '<span style="display:inline-block; background:#e0f2fe; color:#0284c7; padding:2px 7px; border-radius:4px; font-weight:600; font-size:0.83rem;">' . htmlspecialchars($sig_val) . '</span>' : '<span style="color:#94a3b8;">-</span>'; ?></td>
+            <td><?php echo !empty($isbn_val) ? '<span style="font-size:0.83rem; font-family:monospace;">' . htmlspecialchars($isbn_val) . '</span>' : '<span style="color:#94a3b8;">-</span>'; ?></td>
             <td><?php echo htmlspecialchars($libro['autor'] ?? 'N/A'); ?></td>
             <td><?php echo htmlspecialchars($libro['categoria'] ?? 'N/A'); ?></td>
             <td>
@@ -224,7 +250,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         
         <?php if (empty($libros)): ?>
         <tr>
-            <td colspan="8" style="text-align: center; padding: 30px;">No se encontraron libros.</td>
+            <td colspan="<?php echo ($_SESSION['user_role'] !== 'Lector') ? 10 : 9; ?>" style="text-align: center; padding: 30px;">No se encontraron libros.</td>
         </tr>
         <?php endif; ?>
     </tbody>
@@ -294,11 +320,13 @@ function closeImageModal() {
     var currentXHR = null;
 
     var placeholders = {
-        'all': 'Buscar por título, autor, inventario, categoría o editorial...',
+        'all': 'Buscar por título, autor, signatura, inventario, ISBN, materia o editorial...',
         'title': 'Escribe el título del libro...',
         'author': 'Escribe el nombre del autor...',
         'isbn': 'Escribe el número de inventario...',
-        'category': 'Escribe el nombre de la categoría...',
+        'signatura': 'Escribe la signatura topográfica (ej: 001 SAG)...',
+        'isbn_editorial': 'Escribe el ISBN editorial (ej: 84-08-01645-8)...',
+        'category': 'Escribe el nombre de la materia...',
         'publisher': 'Escribe el nombre de la editorial...'
     };
 

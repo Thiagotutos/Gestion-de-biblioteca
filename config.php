@@ -26,4 +26,32 @@ try {
          die("Error de conexión a la base de datos: " . $e2->getMessage());
     }
 }
+
+// -----------------------------------------------------------------------------
+// Verificación suave de columnas signatura e isbn_editorial en books
+// -----------------------------------------------------------------------------
+try {
+    $pdo->query("SELECT signatura, isbn_editorial FROM books LIMIT 1");
+} catch (\Exception $e) {
+    try {
+        $pdo->exec("ALTER TABLE books ADD COLUMN signatura VARCHAR(100) NULL AFTER isbn");
+        $pdo->exec("ALTER TABLE books ADD COLUMN isbn_editorial VARCHAR(50) NULL AFTER signatura");
+        $pdo->exec("ALTER TABLE books ADD INDEX (signatura)");
+        $pdo->exec("ALTER TABLE books ADD INDEX (isbn_editorial)");
+
+        // Poblar desde observacion para registros existentes
+        $stmt_m = $pdo->query("SELECT id, observacion FROM books WHERE observacion IS NOT NULL");
+        $stmt_u = $pdo->prepare("UPDATE books SET signatura = ?, isbn_editorial = ? WHERE id = ?");
+        while ($r_m = $stmt_m->fetch()) {
+            $sig = null; $isbn_ed = null;
+            if (preg_match('/Signatura:\s*([^\|]+)/i', $r_m['observacion'], $m)) $sig = trim($m[1]);
+            if (preg_match('/ISBN:\s*([^\|]+)/i', $r_m['observacion'], $m)) $isbn_ed = trim($m[1]);
+            if ($sig !== null || $isbn_ed !== null) {
+                $stmt_u->execute([$sig, $isbn_ed, $r_m['id']]);
+            }
+        }
+    } catch (\Exception $e2) {
+        // En caso de que no tenga permisos DDL
+    }
+}
 ?>

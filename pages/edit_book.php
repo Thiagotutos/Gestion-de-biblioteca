@@ -54,6 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $author_id = !empty($_POST['author_id']) ? (int)$_POST['author_id'] : null;
     $author_name = trim($_POST['author_name'] ?? '');
     $isbn = trim($_POST['isbn'] ?? '');
+    $signatura = trim($_POST['signatura'] ?? '') ?: null;
+    $isbn_editorial = trim($_POST['isbn_editorial'] ?? '') ?: null;
     $publisher_id = !empty($_POST['publisher_id']) ? (int)$_POST['publisher_id'] : null;
     $publisher_name = trim($_POST['publisher_name'] ?? '');
     $lugar_editorial = trim($_POST['lugar_editorial'] ?? '') ?: null;
@@ -167,8 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $stmt = $pdo->prepare("UPDATE books SET titulo=?, author_id=?, isbn=?, publisher_id=?, lugar_editorial=?, fecha_publicacion=?, category_id=?, rack_id=?, imagen=?, notas=?, observacion=?, estado=? WHERE id=?");
-            $stmt->execute([$titulo, $author_id, $isbn, $publisher_id, $lugar_editorial, $fecha_publicacion, $category_id, $rack_id, $imagen, $notas, $observacion, $estado, $id]);
+            $stmt = $pdo->prepare("UPDATE books SET titulo=?, author_id=?, isbn=?, signatura=?, isbn_editorial=?, publisher_id=?, lugar_editorial=?, fecha_publicacion=?, category_id=?, rack_id=?, imagen=?, notas=?, observacion=?, estado=? WHERE id=?");
+            $stmt->execute([$titulo, $author_id, $isbn, $signatura, $isbn_editorial, $publisher_id, $lugar_editorial, $fecha_publicacion, $category_id, $rack_id, $imagen, $notas, $observacion, $estado, $id]);
             
             $pdo->commit();
             $_SESSION['success_msg'] = "Libro actualizado exitosamente.";
@@ -226,6 +228,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" name="isbn" class="form-control" value="<?php echo htmlspecialchars($_POST['isbn'] ?? $libro['isbn'] ?? ''); ?>">
         </div>
 
+        <!-- Signatura Topográfica e ISBN Editorial -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Signatura Topográfica</label>
+                <input type="text" name="signatura" class="form-control" placeholder="Ej: 001 SAG, R 806.0-3 REA..." value="<?php echo htmlspecialchars($_POST['signatura'] ?? $libro['signatura'] ?? ''); ?>">
+                <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">Ubicación en estantería (CDD / Código de autor).</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>ISBN (Editorial)</label>
+                <input type="text" name="isbn_editorial" class="form-control" placeholder="Ej: 84-08-01645-8, 978-950-07..." value="<?php echo htmlspecialchars($_POST['isbn_editorial'] ?? $libro['isbn_editorial'] ?? ''); ?>">
+                <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">Código comercial internacional impreso en el libro.</small>
+            </div>
+        </div>
+
         <!-- Buscador en tiempo real: Editorial -->
         <div class="form-group" style="position: relative;">
             <label style="display: flex; justify-content: space-between; align-items: center;">
@@ -253,16 +269,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 3px;">Solo se permiten fechas pasadas o la fecha de hoy.</small>
         </div>
 
-        <!-- Buscador en tiempo real: Categoría -->
+        <!-- Buscador en tiempo real: Materia -->
         <div class="form-group" style="position: relative;">
             <label style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Categoría</span>
+                <span>Materia</span>
                 <span id="categoryStatusBadge" class="status-badge" style="<?php echo $curr_category ? 'background:#2e7d32;color:#fff;' : 'display:none;'; ?> font-size: 0.75rem; padding: 2px 6px;">
                     <?php echo $curr_category ? '✓ Seleccionado' : ''; ?>
                 </span>
             </label>
             <div style="position: relative;">
-                <input type="text" id="categorySearchInput" name="category_name" class="form-control" placeholder="Escribe para buscar o ingresar categoría..." value="<?php echo htmlspecialchars($_POST['category_name'] ?? $curr_category); ?>" autocomplete="off">
+                <input type="text" id="categorySearchInput" name="category_name" class="form-control" placeholder="Escribe para buscar o ingresar materia..." value="<?php echo htmlspecialchars($_POST['category_name'] ?? $curr_category); ?>" autocomplete="off">
                 <input type="hidden" name="category_id" id="selectedCategoryId" value="<?php echo htmlspecialchars($_POST['category_id'] ?? $libro['category_id']); ?>">
                 <span id="categorySpinner" class="search-spinner" style="display: none;"></span>
             </div>

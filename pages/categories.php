@@ -15,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
         $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
         try { 
             $stmt->execute([$name]); 
-            $_SESSION['success_msg'] = "Categoría agregada."; 
+            $_SESSION['success_msg'] = "Materia agregada."; 
         } catch (Exception $e) { 
-            $_SESSION['error_msg'] = "La categoría ya existe."; 
+            $_SESSION['error_msg'] = "La materia ya existe."; 
         }
         header('Location: categories.php');
         exit;
@@ -33,9 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_item'])) {
         $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?");
         try {
             $stmt->execute([$name, $id]);
-            $_SESSION['success_msg'] = "Categoría actualizada exitosamente.";
+            $_SESSION['success_msg'] = "Materia actualizada exitosamente.";
         } catch (Exception $e) {
-            $_SESSION['error_msg'] = "Error al actualizar o la categoría ya existe.";
+            $_SESSION['error_msg'] = "Error al actualizar o la materia ya existe.";
         }
         header('Location: categories.php');
         exit;
@@ -57,7 +57,7 @@ if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     $pdo->prepare("UPDATE books SET category_id = NULL WHERE category_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM categories WHERE id = ?")->execute([$id]);
-    $_SESSION['success_msg'] = "Categoría eliminada.";
+    $_SESSION['success_msg'] = "Materia eliminada.";
     header('Location: categories.php');
     exit;
 }
@@ -90,8 +90,8 @@ if ($search !== '') $url_params['search'] = $search;
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="content-header">
-    <h2>Gestionar Categorías</h2>
-    <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> categorías</span>
+    <h2>Gestionar Materias</h2>
+    <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> materias</span>
 </div>
 
 <?php if (isset($_SESSION['success_msg'])): ?>
@@ -108,11 +108,11 @@ if ($search !== '') $url_params['search'] = $search;
     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
     <div class="form-container form-pane">
         <?php if ($edit_item): ?>
-            <h3 style="margin-bottom: 8px;">Editar Categoría <small style="font-size: 0.85rem; color: #666; font-weight: normal;">(Modificando ID #<?php echo $edit_item['id']; ?>)</small></h3>
+            <h3 style="margin-bottom: 8px;">Editar Materia <small style="font-size: 0.85rem; color: #666; font-weight: normal;">(Modificando ID #<?php echo $edit_item['id']; ?>)</small></h3>
             <form method="POST" class="form-inline-action">
                 <input type="hidden" name="id" value="<?php echo $edit_item['id']; ?>">
                 <div class="form-group">
-                    <label>Nombre de la Categoría</label>
+                    <label>Nombre de la Materia</label>
                     <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($edit_item['name']); ?>" required autofocus>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -121,13 +121,13 @@ if ($search !== '') $url_params['search'] = $search;
                 </div>
             </form>
         <?php else: ?>
-            <h3 style="margin-bottom: 8px;">Agregar Categoría</h3>
+            <h3 style="margin-bottom: 8px;">Agregar Materia</h3>
             <form method="POST" class="form-inline-action">
                 <div class="form-group">
-                    <label>Nombre de la Categoría</label>
-                    <input type="text" name="name" class="form-control" required placeholder="Ej: Literatura, Historia...">
+                    <label>Nombre de la Materia</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Ej: Literatura, Historia, Matemática...">
                 </div>
-                <button type="submit" name="add_item" class="btn btn-primary" style="padding: 10px 20px;">Guardar Categoría</button>
+                <button type="submit" name="add_item" class="btn btn-primary" style="padding: 10px 20px;">Guardar Materia</button>
             </form>
         <?php endif; ?>
     </div>
@@ -139,7 +139,7 @@ if ($search !== '') $url_params['search'] = $search;
                 <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar categoría..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
+                <input type="text" name="search" id="liveSearchInput" class="search-input" placeholder="Buscar materia..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
                 <span id="searchSpinner" class="search-spinner" style="display:none;"></span>
             </div>
             <button type="submit" class="btn btn-primary">Buscar</button>
@@ -172,7 +172,7 @@ if ($search !== '') $url_params['search'] = $search;
                     <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
                     <td>
                         <a href="categories.php?edit=<?php echo $item['id']; ?>" class="btn btn-edit" style="margin-right: 5px;">Editar</a>
-                        <a href="categories.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar categoría?');">Borrar</a>
+                        <a href="categories.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar materia?');">Borrar</a>
                     </td>
                     <?php else: ?>
                     <td>-</td>
@@ -180,7 +180,7 @@ if ($search !== '') $url_params['search'] = $search;
                 </tr>
                 <?php endforeach; ?>
                 <?php if (empty($categories)): ?>
-                <tr><td colspan="4" style="text-align: center;">No hay categorías.</td></tr>
+                <tr><td colspan="4" style="text-align: center;">No hay materias.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

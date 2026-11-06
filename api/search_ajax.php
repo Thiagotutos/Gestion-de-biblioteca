@@ -66,6 +66,16 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
                 $where_clauses[] = "b.isbn LIKE ?";
                 $params[] = $search_param;
                 break;
+            case 'signatura':
+                $where_clauses[] = "(b.signatura LIKE ? OR b.observacion LIKE ?)";
+                $params[] = $search_param;
+                $params[] = $search_param;
+                break;
+            case 'isbn_editorial':
+                $where_clauses[] = "(b.isbn_editorial LIKE ? OR b.observacion LIKE ?)";
+                $params[] = $search_param;
+                $params[] = $search_param;
+                break;
             case 'category':
                 $where_clauses[] = "c.name LIKE ?";
                 $params[] = $search_param;
@@ -75,8 +85,8 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
                 $params[] = $search_param;
                 break;
             default: // 'all'
-                $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ?)";
-                $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+                $where_clauses[] = "(b.titulo LIKE ? OR a.name LIKE ? OR b.isbn LIKE ? OR b.signatura LIKE ? OR b.isbn_editorial LIKE ? OR c.name LIKE ? OR p.name LIKE ? OR b.lugar_editorial LIKE ? OR b.observacion LIKE ?)";
+                $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
                 break;
         }
     }
@@ -103,7 +113,7 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
     
     // Obtener libros
     $query = "
-        SELECT b.id, b.titulo, b.isbn, b.estado, b.imagen,
+        SELECT b.id, b.titulo, b.isbn, b.signatura, b.isbn_editorial, b.estado, b.imagen,
                b.lugar_editorial, b.fecha_publicacion, b.notas, b.observacion,
                c.name as categoria, a.name as autor, p.name as editorial
         FROM books b
@@ -122,11 +132,23 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
     echo '<div id="ajax-count" data-total="' . $total . '">' . number_format($total) . ' libros encontrados</div>';
     echo '<div class="table-responsive">';
     echo '<table class="data-table"><thead><tr>';
-    echo '<th>ID</th><th>Libro</th><th>Nº Inventario</th><th>Autor</th><th>Categoría</th><th>Editorial</th><th>Estado</th>';
+    echo '<th>ID</th><th>Libro</th><th>Nº Inventario</th><th>Signatura</th><th>ISBN</th><th>Autor</th><th>Materia</th><th>Editorial</th><th>Estado</th>';
     if ($user_role !== 'Lector') echo '<th>Acción</th>';
     echo '</tr></thead><tbody>';
     
     foreach ($libros as $libro) {
+        // Resolver signatura si vino vacía de la columna
+        $sig_val = !empty($libro['signatura']) ? $libro['signatura'] : '';
+        if ($sig_val === '' && !empty($libro['observacion']) && preg_match('/Signatura:\s*([^\|]+)/i', $libro['observacion'], $ms)) {
+            $sig_val = trim($ms[1]);
+        }
+        
+        // Resolver ISBN si vino vacío de la columna
+        $isbn_val = !empty($libro['isbn_editorial']) ? $libro['isbn_editorial'] : '';
+        if ($isbn_val === '' && !empty($libro['observacion']) && preg_match('/ISBN:\s*([^\|]+)/i', $libro['observacion'], $mi)) {
+            $isbn_val = trim($mi[1]);
+        }
+
         echo '<tr>';
         echo '<td>' . $libro['id'] . '</td>';
         echo '<td><div style="display: flex; align-items: center;">';
@@ -146,7 +168,9 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
             echo '<div style="font-size: 0.72rem; color: #0288d1; margin-top: 2px;" title="' . htmlspecialchars($libro['observacion']) . '">🏷️ ' . htmlspecialchars(mb_strimwidth($libro['observacion'], 0, 48, '...')) . '</div>';
         }
         echo '</div></div></td>';
-        echo '<td>' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '</td>';
+        echo '<td><strong>' . htmlspecialchars($libro['isbn'] ?? 'N/A') . '</strong></td>';
+        echo '<td>' . (!empty($sig_val) ? '<span style="display:inline-block; background:#e0f2fe; color:#0284c7; padding:2px 7px; border-radius:4px; font-weight:600; font-size:0.83rem;">' . htmlspecialchars($sig_val) . '</span>' : '<span style="color:#94a3b8;">-</span>') . '</td>';
+        echo '<td>' . (!empty($isbn_val) ? '<span style="font-size:0.83rem; font-family:monospace;">' . htmlspecialchars($isbn_val) . '</span>' : '<span style="color:#94a3b8;">-</span>') . '</td>';
         echo '<td>' . htmlspecialchars($libro['autor'] ?? 'N/A') . '</td>';
         echo '<td>' . htmlspecialchars($libro['categoria'] ?? 'N/A') . '</td>';
         echo '<td>' . htmlspecialchars($libro['editorial'] ?? 'N/A');
@@ -170,7 +194,7 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
     }
     
     if (empty($libros)) {
-        $cols = ($user_role !== 'Lector') ? 8 : 7;
+        $cols = ($user_role !== 'Lector') ? 10 : 9;
         echo '<tr><td colspan="' . $cols . '" style="text-align: center; padding: 30px;">No se encontraron libros.</td></tr>';
     }
     
@@ -233,7 +257,7 @@ function search_simple($pdo, $table, $search, $per_page, $offset, $page, $user_r
     // Nombre amigable para la tabla
     $table_names = [
         'authors' => 'autores',
-        'categories' => 'categorías',
+        'categories' => 'materias',
         'publishers' => 'editoriales',
         'racks' => 'estantes'
     ];
@@ -242,7 +266,7 @@ function search_simple($pdo, $table, $search, $per_page, $offset, $page, $user_r
     // Texto para borrado
     $delete_labels = [
         'authors' => ['Borrar', '¿Borrar autor? Se desvinculará de sus libros.'],
-        'categories' => ['Borrar', '¿Borrar categoría?'],
+        'categories' => ['Borrar', '¿Borrar materia?'],
         'publishers' => ['Borrar', '¿Borrar editorial?'],
         'racks' => ['Borrar', '¿Borrar estante?']
     ];
