@@ -163,9 +163,6 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         <?php if ($search !== '' || $filter_estado !== '' || $search_by !== 'all'): ?>
         <a href="books.php" class="btn" style="background: #999;">Limpiar</a>
         <?php endif; ?>
-        <button type="button" onclick="window.print();" class="btn" style="background: #475569; color: white;" title="Imprimir catálogo">
-            Imprimir
-        </button>
     </form>
 </div>
 

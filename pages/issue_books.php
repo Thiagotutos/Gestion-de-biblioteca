@@ -415,7 +415,6 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                         <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #0288d1; color: white; border: none; border-radius: 4px;" onclick="filterTurnoTable('todos', this)">Todos</button>
                         <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Mañana', this)">Mañana</button>
                         <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Tarde', this)">Tarde</button>
-                        <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: transparent; color: #475569; border: none; border-radius: 4px;" onclick="filterTurnoTable('Noche', this)">Noche</button>
                     </div>
                     <button type="button" onclick="window.print();" class="btn" style="padding: 5px 12px; font-size: 0.82rem; background: #475569; color: white; border: none;" title="Imprimir planilla de préstamos">
                         Imprimir Planilla

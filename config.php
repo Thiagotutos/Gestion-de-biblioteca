@@ -73,5 +73,8 @@ try {
     try {
         $pdo->exec("ALTER TABLE transactions ADD COLUMN fecha_devolucion_real DATETIME DEFAULT NULL AFTER fecha_devolucion_esperada");
     } catch (\Exception $e2) {}
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD INDEX idx_trans_accion (accion)");
+    } catch (\Exception $e2) {}
 }
 ?>
