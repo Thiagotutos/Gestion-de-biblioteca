@@ -54,4 +54,24 @@ try {
         // En caso de que no tenga permisos DDL
     }
 }
+
+// -----------------------------------------------------------------------------
+// Verificación suave de columnas turno, curso, responsable en transactions
+// -----------------------------------------------------------------------------
+try {
+    $pdo->query("SELECT turno, curso, responsable, fecha_devolucion_real FROM transactions LIMIT 1");
+} catch (\Exception $e) {
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD COLUMN turno ENUM('Mañana','Tarde','Noche') DEFAULT NULL AFTER lector_documento");
+    } catch (\Exception $e2) {}
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD COLUMN curso VARCHAR(50) DEFAULT NULL AFTER turno");
+    } catch (\Exception $e2) {}
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD COLUMN responsable VARCHAR(255) DEFAULT NULL AFTER curso");
+    } catch (\Exception $e2) {}
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD COLUMN fecha_devolucion_real DATETIME DEFAULT NULL AFTER fecha_devolucion_esperada");
+    } catch (\Exception $e2) {}
+}
 ?>
