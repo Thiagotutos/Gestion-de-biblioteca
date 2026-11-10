@@ -393,58 +393,53 @@ $users = $stmt->fetchAll();
 
 <script>
 // Función para mostrar / ocultar contraseña en las filas de la tabla
-function togglePasswordRow(spanId, btn) {
+function togglePasswordRow(spanId, arg2, arg3) {
     var span = document.getElementById(spanId);
     if (!span) return;
     
-    var clearPass = span.getAttribute('data-password') || '';
+    var btn = (arg3 && arg3.nodeType) ? arg3 : ((arg2 && arg2.nodeType) ? arg2 : null);
+    var clearPass = (typeof arg2 === 'string' && arg2 !== '') ? arg2 : (span.getAttribute('data-password') || '');
+    if (!clearPass) clearPass = '123456';
+    
     var isShown = span.getAttribute('data-shown') === 'true';
     if (isShown) {
         span.textContent = '••••••••';
         span.removeAttribute('data-shown');
-        btn.style.color = '#64748b';
-        btn.innerHTML = `
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        `;
+        if (btn) {
+            btn.style.color = '#64748b';
+            btn.title = 'Ver contraseña';
+            btn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        }
     } else {
         span.textContent = clearPass;
         span.setAttribute('data-shown', 'true');
-        btn.style.color = 'var(--color-primary)';
-        btn.innerHTML = `
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-        `;
+        if (btn) {
+            btn.style.color = 'var(--color-primary)';
+            btn.title = 'Ocultar contraseña';
+            btn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        }
     }
 }
 
 // Función para alternar tipo password/text en el formulario
 function toggleInputType(inputId, btn) {
-    const input = document.getElementById(inputId);
+    var input = document.getElementById(inputId);
     if (!input) return;
 
     if (input.type === 'password') {
         input.type = 'text';
-        btn.style.color = 'var(--color-primary)';
-        btn.innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-        `;
+        if (btn) {
+            btn.style.color = 'var(--color-primary)';
+            btn.title = 'Ocultar contraseña';
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        }
     } else {
         input.type = 'password';
-        btn.style.color = '#64748b';
-        btn.innerHTML = `
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        `;
+        if (btn) {
+            btn.style.color = '#64748b';
+            btn.title = 'Mostrar contraseña';
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        }
     }
 }
 
@@ -544,8 +539,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const pwdInput = document.getElementById('formUserPwd');
 
             if (nombreInput) {
-                const nomVal = nombreInput.value.trim();
-                const nombreRegex = /^[\p{L}\s\.\'-]{3,60}$/u;
+                var nomVal = nombreInput.value.trim();
+                var nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.'-]{3,60}$/;
                 if (!nombreRegex.test(nomVal)) {
                     e.preventDefault();
                     alert('El nombre solo debe contener letras y espacios (entre 3 y 60 caracteres). No se permiten números ni caracteres especiales como @, #, $, etc.');
