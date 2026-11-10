@@ -171,7 +171,7 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
         </a>
     </div>
     
-    <div class="table-responsive">
+    <div class="table-responsive table-scroll-5">
         <table class="table" style="width: 100%; font-size: 0.88rem; margin: 0;">
             <thead>
                 <tr style="background: #fef2f2; color: #991b1b;">

@@ -77,4 +77,16 @@ try {
         $pdo->exec("ALTER TABLE transactions ADD INDEX idx_trans_accion (accion)");
     } catch (\Exception $e2) {}
 }
+
+// -----------------------------------------------------------------------------
+// Verificación suave de plain_password en users
+// -----------------------------------------------------------------------------
+try {
+    $pdo->query("SELECT plain_password FROM users LIMIT 1");
+} catch (\Exception $e) {
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN plain_password VARCHAR(255) NULL AFTER password");
+        $pdo->exec("UPDATE users SET plain_password = 'admin123' WHERE plain_password IS NULL AND email IN ('admin@biblioteca.com', 'bibliotecario@biblioteca.com', 'lector@biblioteca.com')");
+    } catch (\Exception $e2) {}
+}
 ?>

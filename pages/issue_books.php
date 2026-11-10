@@ -342,7 +342,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
 
             <!-- Lista interactiva de libros seleccionados -->
             <div id="selectedBooksContainer" style="margin-bottom: 18px;">
-                <div id="selectedBooksList" style="display: flex; flex-direction: column; gap: 8px;">
+                <div id="selectedBooksList" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">
                     <div id="noBooksSelectedNotice" style="padding: 12px 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-size: 0.88rem;">
                         Busca y selecciona uno o más libros arriba para agregarlos a este préstamo.
                     </div>
@@ -421,7 +421,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                     </button>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive table-scroll-5">
             <table class="data-table" id="tablaPrestamosActivos">
                 <thead>
                     <tr>
@@ -526,7 +526,7 @@ $logs_movimientos = $pdo->query($query_logs)->fetchAll();
                 <h3>Registro de Auditoría y Movimientos</h3>
                 <span style="font-size: 0.85rem; color: #555;">Mostrando los últimos <strong><?php echo count($logs_movimientos); ?></strong> movimientos</span>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive table-scroll-5">
             <table class="data-table">
                 <thead>
                     <tr>

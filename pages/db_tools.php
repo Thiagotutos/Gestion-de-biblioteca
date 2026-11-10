@@ -294,7 +294,7 @@ $totalStored = count($storedBackups);
             <small style="color: #94a3b8;">Se creará una copia automáticamente al inicio de cada mes, o puedes hacer clic en <strong>"Crear Respaldo Ahora"</strong>.</small>
         </div>
     <?php else: ?>
-        <div class="table-responsive">
+        <div class="table-responsive table-scroll-5">
             <table class="table" style="width: 100%; font-size: 0.92rem;">
                 <thead>
                     <tr>

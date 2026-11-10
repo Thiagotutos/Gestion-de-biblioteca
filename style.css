@@ -253,6 +253,9 @@ body.sidebar-collapsed .sidebar {
     font-size: 1rem;
     line-height: 1;
 }
+.btn-pwd-eye svg {
+    pointer-events: none;
+}
 .btn-pwd-eye:hover {
     background-color: #e2e8f0;
     color: var(--color-primary);
@@ -313,6 +316,38 @@ body.sidebar-collapsed .sidebar {
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     display: block;
+}
+
+/* Contenedor limitado visualmente a 5 registros con scroll vertical suave y cabecera fija */
+.table-scroll-5 {
+    max-height: 295px;
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+}
+
+.table-scroll-5 thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8fafc;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.table-scroll-5::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+.table-scroll-5::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+.table-scroll-5::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.table-scroll-5::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* Table */
