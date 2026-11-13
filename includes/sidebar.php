@@ -25,7 +25,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>">Usuarios</a></li>
                 <li><a href="db_tools.php" class="<?php echo ($current_page == 'db_tools.php') ? 'active' : ''; ?>">Importar Datos / Respaldo</a></li>
                 <?php endif; ?>
+                <?php if (!empty($_SESSION['user_id'])): ?>
                 <li><a href="../logout.php">Cerrar Sesión</a></li>
+                <?php else: ?>
+                <li><a href="../login.php" style="color: var(--color-primary); font-weight: 600;">Iniciar Sesión</a></li>
+                <?php endif; ?>
             </ul>
         </aside>
 

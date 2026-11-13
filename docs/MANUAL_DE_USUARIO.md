@@ -61,21 +61,24 @@ El sistema implementa un modelo de **Control de Acceso Basado en Roles (RBAC)** 
 
 ---
 
-## 3. Acceso e Inicio de Sesión
+## 3. Acceso al Sistema y Portal de Autoconsulta
 
-### Pasos para Ingresar:
-1. Abra su navegador web preferido (Google Chrome, Firefox, Edge o Safari).
-2. Ingrese a la dirección oficial: **`https://sistemabiblioteca.dpdns.org`** *(o `http://localhost/Gestion-de-biblioteca` si trabaja en el servidor local)*.
-3. En la pantalla de bienvenida, complete:
-   * **Correo electrónico:** Su dirección de correo registrada (ej: `bibliotecario@biblioteca.com`).
-   * **Contraseña:** Su clave de acceso personal.
-4. Presione el botón **"Iniciar Sesión"**.
+El sistema cuenta con un **Portal de Catálogo Abierto**: cualquier estudiante, docente o visitante que ingrese a la dirección web accede **directamente al Dashboard en Modo Lector** sin necesidad de registrarse ni crear cuentas previas.
+
+### Modos de Uso:
+1. **Acceso Público para Lectores (Sin Inicio de Sesión):**
+   * Al entrar a **`https://sistemabiblioteca.dpdns.org`**, el sistema lo posiciona de inmediato en el panel de consulta.
+   * Puede buscar libros por título, autor, signatura topográfica de estante o materia en tiempo real.
+   * La información privada de otros lectores y el registro de deudores se mantiene oculta para resguardar la privacidad.
+2. **Ingreso de Personal (Bibliotecarios y Administradores):**
+   * En la esquina superior derecha del Navbar verá el botón **"Iniciar Sesión"** (o en la barra lateral).
+   * Al hacer clic, accederá al formulario de login donde ingresará su correo y clave autorizada.
+   * Al autenticarse, el sistema desbloqueará las herramientas de préstamos, altas de libros, edición y administración de la base de datos según su rol.
 
 > [!TIP]
-> **Cuentas de Acceso Predeterminadas (Entorno de Evaluación):**
+> **Cuentas de Acceso para Demostración (Evaluación):**
 > * **Administrador:** `admin@biblioteca.com` | Clave: `admin123`
 > * **Bibliotecario:** `bibliotecario@biblioteca.com` | Clave: `admin123`
-> * **Lector:** `lector@biblioteca.com` | Clave: `admin123`
 
 ---
 
@@ -247,3 +250,4 @@ Sí. El sistema cuenta con estilos de impresión optimizados. Desde el navegador
 Solo deben ingresar desde cualquier navegador a la dirección web pública segura:  
 👉 **`https://sistemabiblioteca.dpdns.org`**  
 No requieren instalar ningún programa adicional ni estar conectados a la misma red WiFi.
+

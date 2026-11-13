@@ -2,10 +2,8 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/header.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
+// Rol de usuario (por defecto 'Lector' para visitantes públicos)
+$user_role = $_SESSION['user_role'] ?? 'Lector';
 
 // Paginación
 $per_page = 25;
@@ -110,7 +108,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
     <h2>Gestionar Libros</h2>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> libros encontrados</span>
-        <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+        <?php if ($user_role !== 'Lector'): ?>
         <a href="add_book.php" class="btn btn-primary">+ Agregar Libro</a>
         <?php endif; ?>
     </div>
@@ -181,7 +179,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <th>Materia</th>
             <th>Editorial</th>
             <th>Estado</th>
-            <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+            <?php if ($user_role !== 'Lector'): ?>
             <th>Acción</th>
             <?php endif; ?>
         </tr>
@@ -252,7 +250,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
                     <?php echo htmlspecialchars($libro['estado']); ?>
                 </span>
             </td>
-            <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+            <?php if ($user_role !== 'Lector'): ?>
             <td>
                 <a href="edit_book.php?id=<?php echo $libro['id']; ?>" class="btn btn-edit">Editar</a>
                 <?php if ($libro['estado'] === 'Prestado'): ?>
@@ -267,7 +265,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
         
         <?php if (empty($libros)): ?>
         <tr>
-            <td colspan="<?php echo ($_SESSION['user_role'] !== 'Lector') ? 10 : 9; ?>" style="text-align: center; padding: 30px;">No se encontraron libros.</td>
+            <td colspan="<?php echo ($user_role !== 'Lector') ? 10 : 9; ?>" style="text-align: center; padding: 30px;">No se encontraron libros.</td>
         </tr>
         <?php endif; ?>
     </tbody>

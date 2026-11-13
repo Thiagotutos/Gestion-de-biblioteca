@@ -2,9 +2,11 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/header.php';
 
-if (!isset($_SESSION['user_id'])) { header('Location: ../login.php'); exit; }
+// Modo usuario y rol (visitantes públicos operan como Lector en solo lectura)
+$user_role = $_SESSION['user_role'] ?? 'Lector';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
+    if (!isset($_SESSION['user_id']) || $user_role === 'Lector') { header('Location: racks.php'); exit; }
     $name = trim($_POST['name']);
     if ($name) {
         $stmt = $pdo->prepare("INSERT INTO racks (name) VALUES (?)");
@@ -15,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
 }
 
 if (isset($_GET['delete'])) {
-    if ($_SESSION['user_role'] === 'Lector') { header('Location: racks.php'); exit; }
+    if (!isset($_SESSION['user_id']) || $user_role === 'Lector') { header('Location: racks.php'); exit; }
     $id = $_GET['delete'];
     $pdo->prepare("UPDATE books SET rack_id = NULL WHERE rack_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM racks WHERE id = ?")->execute([$id]);
@@ -56,7 +58,7 @@ if ($search !== '') $url_params['search'] = $search;
 <?php endif; ?>
 
 <div class="split-layout">
-    <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+    <?php if ($user_role !== 'Lector'): ?>
     <div class="form-container form-pane">
         <h3 style="margin-bottom: 8px;">Agregar Estante / Ubicación</h3>
         <form method="POST" class="form-inline-action">
@@ -91,7 +93,7 @@ if ($search !== '') $url_params['search'] = $search;
                     <td><?php echo $item['id']; ?></td>
                     <td><?php echo htmlspecialchars($item['name']); ?></td>
                     <td><span class="status-badge status-available"><?php echo $count; ?></span></td>
-                    <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+                    <?php if ($user_role !== 'Lector'): ?>
                     <td><a href="racks.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar estante?');">Borrar</a></td>
                     <?php else: ?><td>-</td><?php endif; ?>
                 </tr>

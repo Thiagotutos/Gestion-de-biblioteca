@@ -45,6 +45,11 @@ unset($_SESSION['login_error']);
                 </div>
             </div>
             <button type="submit" class="btn btn-block" style="margin-top: 20px;">Iniciar Sesión</button>
+            <div style="text-align: center; margin-top: 18px;">
+                <a href="pages/dashboard.php" style="color: #64748b; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    &larr; Volver al Catálogo (Modo Lector)
+                </a>
+            </div>
         </form>
     </div>
 

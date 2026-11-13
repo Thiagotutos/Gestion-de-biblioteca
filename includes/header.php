@@ -37,6 +37,14 @@ $usuario_rol = $_SESSION['user_role'] ?? null;
             <?php endif; ?>
             <a href="../logout.php" class="btn-logout" title="Cerrar sesión">Salir</a>
         </div>
+        <?php else: ?>
+        <div class="user-info" style="display: flex; align-items: center; gap: 10px;">
+            <span class="user-role-badge" style="background: rgba(255,255,255,0.22); color: white; border: 1px solid rgba(255,255,255,0.35);">Modo Lector</span>
+            <a href="../login.php" class="btn-logout" style="background-color: var(--color-primary); color: white; border: 1px solid rgba(255,255,255,0.45); text-decoration: none; padding: 6px 14px; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" title="Iniciar sesión como Bibliotecario o Administrador">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                Iniciar Sesión
+            </a>
+        </div>
         <?php endif; ?>
     </nav>
 

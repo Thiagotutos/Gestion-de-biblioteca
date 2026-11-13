@@ -10,11 +10,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../config.php';
 
-// Verificar sesión
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(403);
-    exit('No autorizado');
-}
+// En modo público sin sesión, opera automáticamente como 'Lector'
+$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Lector';
 
 $type = isset($_GET['type']) ? $_GET['type'] : '';
 $search = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -23,7 +20,6 @@ $filter = isset($_GET['filter']) ? trim($_GET['filter']) : '';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = ($type === 'books') ? 25 : 20;
 $offset = ($page - 1) * $per_page;
-$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Lector';
 
 header('Content-Type: text/html; charset=utf-8');
 

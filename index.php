@@ -1,9 +1,6 @@
 <?php
 session_start();
-if (isset($_SESSION['user_id'])) {
-    header('Location: pages/dashboard.php');
-} else {
-    header('Location: login.php');
-}
+// Redirige directamente al Dashboard en modo catálogo / Lector público
+header('Location: pages/dashboard.php');
 exit;
 ?>

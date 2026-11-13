@@ -2,14 +2,12 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/header.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
+// Modo usuario y rol (visitantes públicos operan como Lector en solo lectura)
+$user_role = $_SESSION['user_role'] ?? 'Lector';
 
 // Lógica para agregar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
-    if ($_SESSION['user_role'] === 'Lector') { header('Location: authors.php'); exit; }
+    if (!isset($_SESSION['user_id']) || $user_role === 'Lector') { header('Location: authors.php'); exit; }
     $name = trim($_POST['name']);
     if ($name) {
         $stmt = $pdo->prepare("INSERT INTO authors (name) VALUES (?)");
@@ -26,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_item'])) {
 
 // Lógica para editar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_item'])) {
-    if ($_SESSION['user_role'] === 'Lector') { header('Location: authors.php'); exit; }
+    if (!isset($_SESSION['user_id']) || $user_role === 'Lector') { header('Location: authors.php'); exit; }
     $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
     $name = trim($_POST['name'] ?? '');
     if ($name && $id) {
@@ -44,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_item'])) {
 
 // Obtener datos si se solicita editar
 $edit_item = null;
-if (isset($_GET['edit']) && $_SESSION['user_role'] !== 'Lector') {
+if (isset($_GET['edit']) && $user_role !== 'Lector') {
     $edit_id = (int)$_GET['edit'];
     $stmt_edit = $pdo->prepare("SELECT * FROM authors WHERE id = ?");
     $stmt_edit->execute([$edit_id]);
@@ -53,7 +51,7 @@ if (isset($_GET['edit']) && $_SESSION['user_role'] !== 'Lector') {
 
 // Lógica para borrar
 if (isset($_GET['delete'])) {
-    if ($_SESSION['user_role'] === 'Lector') { header('Location: authors.php'); exit; }
+    if (!isset($_SESSION['user_id']) || $user_role === 'Lector') { header('Location: authors.php'); exit; }
     $id = $_GET['delete'];
     $pdo->prepare("UPDATE books SET author_id = NULL WHERE author_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM authors WHERE id = ?")->execute([$id]);
@@ -110,7 +108,7 @@ if ($search !== '') $url_params['search'] = $search;
 <?php endif; ?>
 
 <div class="split-layout">
-    <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+    <?php if ($user_role !== 'Lector'): ?>
     <!-- Formulario para agregar / editar -->
     <div class="form-container form-pane">
         <?php if ($edit_item): ?>
@@ -177,7 +175,7 @@ if ($search !== '') $url_params['search'] = $search;
                     <td><?php echo $item['id']; ?></td>
                     <td><strong><?php echo htmlspecialchars($item['name']); ?></strong></td>
                     <td><span class="status-badge status-available"><?php echo $count; ?></span></td>
-                    <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+                    <?php if ($user_role !== 'Lector'): ?>
                     <td>
                         <a href="authors.php?edit=<?php echo $item['id']; ?>" class="btn btn-edit" style="margin-right: 5px;">Editar</a>
                         <a href="authors.php?delete=<?php echo $item['id']; ?>" class="btn btn-delete" onclick="return confirm('¿Borrar autor? Se desvinculará de sus libros.');">Borrar</a>

@@ -2,11 +2,9 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/header.php';
 
-// Redirigir si no está logueado
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
+// Modo usuario y rol (los visitantes no logueados navegan como Lector público)
+$is_logged_in = isset($_SESSION['user_id']);
+$user_role = $_SESSION['user_role'] ?? 'Lector';
 
 // Lógica del Estado de la Biblioteca (Abierto/Cerrado) - Zona horaria Argentina
 date_default_timezone_set('America/Argentina/Buenos_Aires');
@@ -103,8 +101,20 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
 <!-- Tarjeta Principal del Dashboard -->
 <div style="background: white; padding: 28px 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 15px;">
     <div style="text-align: center; margin-bottom: 25px;">
-        <h2 style="color: var(--color-primary); margin-bottom: 6px;">¡Bienvenido, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h2>
-        <p style="color: #64748b; font-size: 0.95rem; margin: 0;">Panel de control y resumen operativo del Sistema de Biblioteca Escolar.</p>
+        <h2 style="color: var(--color-primary); margin-bottom: 6px;">
+            <?php if ($is_logged_in): ?>
+                ¡Bienvenido, <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?>!
+            <?php else: ?>
+                ¡Bienvenido a la Biblioteca Escolar!
+            <?php endif; ?>
+        </h2>
+        <p style="color: #64748b; font-size: 0.95rem; margin: 0;">
+            <?php if ($is_logged_in): ?>
+                Panel de control y resumen operativo del Sistema de Biblioteca Escolar.
+            <?php else: ?>
+                Consulta de libros, autores, materias y disponibilidad en sala (Modo Lector).
+            <?php endif; ?>
+        </p>
     </div>
     
     <!-- 3 Métricas Principales (Clickeables para ir a su sección) -->
@@ -128,6 +138,7 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
         </a>
 
         <!-- Tarjeta 3: Préstamos Activos -->
+        <?php if ($user_role !== 'Lector'): ?>
         <a href="issue_books.php" style="text-decoration: none; display: block; background: linear-gradient(135deg, var(--color-info), #0277bd); color: white; padding: 22px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 12px -1px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';" title="Ver préstamos y registrar devoluciones">
             <div style="font-size: 2.3rem; font-weight: bold; line-height: 1.1;"><?php echo number_format($total_prestados); ?></div>
             <div style="font-size: 1.05rem; opacity: 0.95; font-weight: 600; margin-top: 4px;">Préstamos</div>
@@ -135,11 +146,20 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
                 <span>Ver préstamos y devoluciones</span> &rarr;
             </div>
         </a>
+        <?php else: ?>
+        <a href="books.php?filter=prestado" style="text-decoration: none; display: block; background: linear-gradient(135deg, var(--color-info), #0277bd); color: white; padding: 22px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 12px -1px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';" title="Ver libros actualmente en préstamo">
+            <div style="font-size: 2.3rem; font-weight: bold; line-height: 1.1;"><?php echo number_format($total_prestados); ?></div>
+            <div style="font-size: 1.05rem; opacity: 0.95; font-weight: 600; margin-top: 4px;">En Préstamo</div>
+            <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px; display: flex; align-items: center; gap: 4px;">
+                <span>Ver ejemplares prestados</span> &rarr;
+            </div>
+        </a>
+        <?php endif; ?>
     </div>
 
     <!-- Botones de Acción Rápida -->
     <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid #e2e8f0;">
-        <?php if ($_SESSION['user_role'] !== 'Lector'): ?>
+        <?php if ($user_role !== 'Lector'): ?>
         <a href="issue_books.php" class="btn" style="background-color: var(--color-primary); color: white; padding: 12px 22px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7.5" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             Crear Préstamo
@@ -148,16 +168,23 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             Agregar Libro
         </a>
+        <?php else: ?>
+            <?php if (!$is_logged_in): ?>
+            <a href="../login.php" class="btn" style="background-color: var(--color-primary); color: white; padding: 12px 22px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Ingreso exclusivo para Bibliotecarios y Administradores">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                Ingreso Bibliotecarios
+            </a>
+            <?php endif; ?>
         <?php endif; ?>
         <a href="books.php" class="btn" style="background-color: #0288d1; color: white; padding: 12px 22px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Ver Libros
+            Explorar Catálogo de Libros
         </a>
     </div>
 </div>
 
-<!-- Sección de Alerta: Préstamos Vencidos o por Vencer -->
-<?php if (!empty($prestamos_alerta)): ?>
+<!-- Sección de Alerta: Préstamos Vencidos o por Vencer (Solo visible para personal autorizado) -->
+<?php if (!empty($prestamos_alerta) && $user_role !== 'Lector'): ?>
 <div style="background: white; border-radius: 8px; padding: 22px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px; border-left: 5px solid #dc2626;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 8px;">
