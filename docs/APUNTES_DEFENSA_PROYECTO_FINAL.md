@@ -222,3 +222,4 @@ Si el profesor pregunta: *"¿Qué cosas le faltan al sistema o qué le mejorarí
   5. Iniciar sesión como Administrador.
   6. Ir a `Importar Datos / Respaldo` y mostrar la lista de las 10 copias de seguridad con su botón de descarga y creación inmediata.
   7. Explicar brevemente la arquitectura limpia sin dependencias y la defensa del por qué no se reutilizan números de inventario.
+
