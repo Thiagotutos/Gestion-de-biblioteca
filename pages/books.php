@@ -105,7 +105,7 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="content-header">
-    <h2>Gestionar Libros</h2>
+    <h2><?php echo ($user_role === 'Lector') ? 'Catálogo de Libros' : 'Gestionar Libros'; ?></h2>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <span id="result-count" style="color: #666; font-size: 0.9rem;"><?php echo number_format($total); ?> libros encontrados</span>
         <?php if ($user_role !== 'Lector'): ?>
