@@ -58,9 +58,19 @@ if ($search !== '') {
     }
 }
 
-if ($filter_estado === 'missing') {
-    $where_clauses[] = "b.estado = 'Extraviado'";
-} elseif ($filter_estado === 'prestado') {
+if ($user_role === 'Lector') {
+    // Los lectores nunca ven libros extraviados
+    $where_clauses[] = "b.estado != 'Extraviado'";
+    if ($filter_estado === 'missing') {
+        $filter_estado = '';
+    }
+} else {
+    if ($filter_estado === 'missing') {
+        $where_clauses[] = "b.estado = 'Extraviado'";
+    }
+}
+
+if ($filter_estado === 'prestado') {
     $where_clauses[] = "b.estado = 'Prestado'";
 } elseif ($filter_estado === 'disponible') {
     $where_clauses[] = "b.estado = 'Disponible'";
@@ -155,7 +165,9 @@ if ($filter_estado !== '') $url_params['filter'] = $filter_estado;
             <option value="">Todos los estados</option>
             <option value="disponible" <?php echo $filter_estado === 'disponible' ? 'selected' : ''; ?>>Disponible</option>
             <option value="prestado" <?php echo $filter_estado === 'prestado' ? 'selected' : ''; ?>>Prestado</option>
+            <?php if ($user_role !== 'Lector'): ?>
             <option value="missing" <?php echo $filter_estado === 'missing' ? 'selected' : ''; ?>>Extraviado</option>
+            <?php endif; ?>
         </select>
         <button type="submit" class="btn btn-primary">Buscar</button>
         <?php if ($search !== '' || $filter_estado !== '' || $search_by !== 'all'): ?>

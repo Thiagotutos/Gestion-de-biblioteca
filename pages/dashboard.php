@@ -22,8 +22,10 @@ if ($dia_semana >= 1 && $dia_semana <= 5 && $hora_actual >= 8 && $hora_actual < 
     $clase_alerta_horario = "alert-success";
 }
 
-// Estadísticas Clave
-$total_libros = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
+// Estadísticas Clave (para lectores se ocultan los libros extraviados)
+$total_libros = ($user_role === 'Lector')
+    ? (int)$pdo->query("SELECT COUNT(*) FROM books WHERE estado != 'Extraviado'")->fetchColumn()
+    : (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
 $total_disponibles = (int)$pdo->query("SELECT COUNT(*) FROM books WHERE estado = 'Disponible'")->fetchColumn();
 $total_prestados = (int)$pdo->query("SELECT COUNT(*) FROM books WHERE estado = 'Prestado'")->fetchColumn();
 
@@ -86,7 +88,7 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
     </div>
 </div>
 
-<?php if ($cant_extraviados > 0): ?>
+<?php if ($cant_extraviados > 0 && $user_role !== 'Lector'): ?>
 <div class="alert alert-warning" style="background-color: var(--color-warning);">
     <strong>¡Atención!</strong> Hay <?php echo $cant_extraviados; ?> libro(s) marcado(s) como extraviado(s). <a href="books.php?filter=missing" style="color:white; text-decoration:underline;">Ver cuáles son</a>
 </div>

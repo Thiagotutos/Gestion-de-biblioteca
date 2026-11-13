@@ -87,9 +87,19 @@ function search_books($pdo, $search, $search_by, $filter, $per_page, $offset, $p
         }
     }
     
-    if ($filter === 'missing') {
-        $where_clauses[] = "b.estado = 'Extraviado'";
-    } elseif ($filter === 'prestado') {
+    if ($user_role === 'Lector') {
+        // Los lectores nunca ven libros extraviados
+        $where_clauses[] = "b.estado != 'Extraviado'";
+        if ($filter === 'missing') {
+            $filter = '';
+        }
+    } else {
+        if ($filter === 'missing') {
+            $where_clauses[] = "b.estado = 'Extraviado'";
+        }
+    }
+    
+    if ($filter === 'prestado') {
         $where_clauses[] = "b.estado = 'Prestado'";
     } elseif ($filter === 'disponible') {
         $where_clauses[] = "b.estado = 'Disponible'";
