@@ -13,6 +13,8 @@ unset($_SESSION['login_error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Biblioteca</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1">
+    <link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e3a8a'/%3E%3Cpath d='M16 11c-2.2-1.6-5.2-2-8-2v13c2.8 0 5.8.4 8 2 2.2-1.6 5.2-2 8-2V9c-2.8 0-5.8.4-8 2z' fill='%23ffffff'/%3E%3Cpath d='M16 11v13' stroke='%23cbd5e1' stroke-width='1.2'/%3E%3Cpath d='M15 7h2v6l-1-0.8-1 0.8V7z' fill='%23f59e0b'/%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=<?php echo file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time(); ?>">
 </head>

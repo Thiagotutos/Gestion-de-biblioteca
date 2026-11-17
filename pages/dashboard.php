@@ -139,21 +139,13 @@ $cant_extraviados = (int)$stmt_extraviados->fetchColumn();
             </div>
         </a>
 
-        <!-- Tarjeta 3: Préstamos Activos -->
+        <!-- Tarjeta 3: Préstamos Activos (Solo visible para personal: Bibliotecarios y Administradores) -->
         <?php if ($user_role !== 'Lector'): ?>
         <a href="issue_books.php" style="text-decoration: none; display: block; background: linear-gradient(135deg, var(--color-info), #0277bd); color: white; padding: 22px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 12px -1px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';" title="Ver préstamos y registrar devoluciones">
             <div style="font-size: 2.3rem; font-weight: bold; line-height: 1.1;"><?php echo number_format($total_prestados); ?></div>
             <div style="font-size: 1.05rem; opacity: 0.95; font-weight: 600; margin-top: 4px;">Préstamos</div>
             <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px; display: flex; align-items: center; gap: 4px;">
                 <span>Ver préstamos y devoluciones</span> &rarr;
-            </div>
-        </a>
-        <?php else: ?>
-        <a href="books.php?filter=prestado" style="text-decoration: none; display: block; background: linear-gradient(135deg, var(--color-info), #0277bd); color: white; padding: 22px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 12px -1px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';" title="Ver libros actualmente en préstamo">
-            <div style="font-size: 2.3rem; font-weight: bold; line-height: 1.1;"><?php echo number_format($total_prestados); ?></div>
-            <div style="font-size: 1.05rem; opacity: 0.95; font-weight: 600; margin-top: 4px;">En Préstamo</div>
-            <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 8px; display: flex; align-items: center; gap: 4px;">
-                <span>Ver ejemplares prestados</span> &rarr;
             </div>
         </a>
         <?php endif; ?>
