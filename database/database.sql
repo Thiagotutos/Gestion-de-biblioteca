@@ -130,7 +130,8 @@ CREATE TABLE `transactions` (
   `turno` enum('Mañana','Tarde','Noche') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `curso` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `responsable` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `librarian_id` int NOT NULL,
+  `librarian_id` int DEFAULT NULL,
+  `librarian_nombre` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `accion` enum('Prestamo','Devolucion','Ingreso') COLLATE utf8mb4_unicode_ci NOT NULL,
   `fecha_hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_devolucion_esperada` date DEFAULT NULL,
@@ -140,8 +141,8 @@ CREATE TABLE `transactions` (
   KEY `user_id` (`user_id`),
   KEY `librarian_id` (`librarian_id`),
   CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`librarian_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`librarian_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------------

@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_book'])) {
     $curso = trim($_POST['curso'] ?? '');
     $responsable = trim($_POST['responsable'] ?? '');
     $librarian_id = $_SESSION['user_id'];
+    $librarian_nombre = $_SESSION['user_name'] ?? 'Personal';
     
     // Fecha límite por defecto: 1 semana a partir de hoy (7 días)
     $fecha_devolucion_esperada = date('Y-m-d', strtotime('+7 days'));
@@ -118,8 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_book'])) {
                 // Registrar transacción y actualizar estado a Prestado para cada copia
                 foreach ($ids_a_prestar as $bid) {
                     $stmt_trans = $pdo->prepare("
-                        INSERT INTO transactions (book_id, user_id, lector_nombre, lector_documento, turno, curso, responsable, librarian_id, accion, fecha_devolucion_esperada) 
-                        VALUES (?, NULL, ?, ?, ?, ?, ?, ?, 'Prestamo', ?)
+                        INSERT INTO transactions (book_id, user_id, lector_nombre, lector_documento, turno, curso, responsable, librarian_id, librarian_nombre, accion, fecha_devolucion_esperada) 
+                        VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, 'Prestamo', ?)
                     ");
                     $stmt_trans->execute([
                         $bid, 
@@ -128,7 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_book'])) {
                         $turno, 
                         $curso, 
                         $responsable ?: null, 
-                        $librarian_id, 
+                        $librarian_id,
+                        $librarian_nombre,
                         $fecha_devolucion_esperada
                     ]);
 
@@ -214,6 +216,7 @@ if (isset($_GET['renew_book'])) {
 if (isset($_GET['return_book'])) {
     $book_id = (int)$_GET['return_book'];
     $librarian_id = $_SESSION['user_id'];
+    $librarian_nombre = $_SESSION['user_name'] ?? 'Personal';
     
     $pdo->beginTransaction();
     try {
@@ -231,7 +234,7 @@ if (isset($_GET['return_book'])) {
         $last_trans = $stmt_user->fetch(PDO::FETCH_ASSOC);
         
         // Registrar devolución con fecha_devolucion_real
-        $stmt = $pdo->prepare("INSERT INTO transactions (book_id, user_id, lector_nombre, lector_documento, turno, curso, responsable, librarian_id, accion, fecha_devolucion_real) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Devolucion', NOW())");
+        $stmt = $pdo->prepare("INSERT INTO transactions (book_id, user_id, lector_nombre, lector_documento, turno, curso, responsable, librarian_id, librarian_nombre, accion, fecha_devolucion_real) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Devolucion', NOW())");
         $stmt->execute([
             $book_id, 
             $last_trans['user_id'] ?? null, 
@@ -240,7 +243,8 @@ if (isset($_GET['return_book'])) {
             $last_trans['turno'] ?? null, 
             $last_trans['curso'] ?? null, 
             $last_trans['responsable'] ?? null,
-            $librarian_id
+            $librarian_id,
+            $librarian_nombre
         ]);
         
         // Actualizar fecha_devolucion_real en el registro de préstamo original
@@ -293,7 +297,7 @@ $query_logs = "
            t.lector_documento, t.turno, t.curso, t.responsable,
            b.id as book_id, b.titulo, b.isbn,
            a.name as autor,
-           lib.nombre as bibliotecario
+           COALESCE(lib.nombre, t.librarian_nombre, 'Personal anterior') as bibliotecario
     FROM transactions t
     LEFT JOIN books b ON t.book_id = b.id
     LEFT JOIN authors a ON b.author_id = a.id

@@ -79,6 +79,23 @@ try {
 }
 
 // -----------------------------------------------------------------------------
+// Verificación suave de librarian_nombre y nulabilidad de librarian_id en transactions
+// -----------------------------------------------------------------------------
+try {
+    $pdo->query("SELECT librarian_nombre FROM transactions LIMIT 1");
+} catch (\Exception $e) {
+    try {
+        $pdo->exec("ALTER TABLE transactions ADD COLUMN librarian_nombre VARCHAR(255) NULL AFTER librarian_id");
+        $pdo->exec("UPDATE transactions t JOIN users u ON t.librarian_id = u.id SET t.librarian_nombre = u.nombre WHERE t.librarian_nombre IS NULL");
+    } catch (\Exception $e2) {}
+}
+
+try {
+    // Permitir librarian_id NULL para que al desvincular un usuario se preserve el historial intacto
+    $pdo->exec("ALTER TABLE transactions MODIFY COLUMN librarian_id INT NULL");
+} catch (\Exception $e3) {}
+
+// -----------------------------------------------------------------------------
 // Verificación suave de plain_password en users
 // -----------------------------------------------------------------------------
 try {

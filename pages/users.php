@@ -235,16 +235,70 @@ if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     if ($id != $_SESSION['user_id']) { // No borrarse a sí mismo
         try {
-            // Verificar si el usuario tiene transacciones de préstamos registradas
-            $stmt_chk = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE librarian_id = ? OR user_id = ?");
-            $stmt_chk->execute([$id, $id]);
-            if ($stmt_chk->fetchColumn() > 0) {
-                $_SESSION['error_msg'] = "No se puede eliminar este usuario porque tiene préstamos o devoluciones registradas en el historial.";
+            // 1. Obtener datos del usuario a eliminar
+            $stmt_u = $pdo->prepare("SELECT id, nombre, email, rol FROM users WHERE id = ?");
+            $stmt_u->execute([$id]);
+            $u_data = $stmt_u->fetch();
+
+            if (!$u_data) {
+                $_SESSION['error_msg'] = "El usuario seleccionado no existe.";
+                header('Location: users.php');
+                exit;
+            }
+
+            // 2. Verificar si el usuario tiene préstamos activos pendientes de devolución
+            // (a) Como prestatario/lector: tiene libros que aún no devolvió
+            $stmt_chk_borrower = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM transactions t 
+                JOIN books b ON t.book_id = b.id 
+                WHERE t.user_id = ? 
+                  AND t.accion = 'Prestamo' 
+                  AND b.estado = 'Prestado' 
+                  AND t.fecha_devolucion_real IS NULL
+            ");
+            $stmt_chk_borrower->execute([$id]);
+            $has_active_borrowed = ((int)$stmt_chk_borrower->fetchColumn() > 0);
+
+            // (b) Como bibliotecario: registró préstamos de libros que actualmente siguen sin devolverse
+            $stmt_chk_issued = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM transactions t 
+                JOIN books b ON t.book_id = b.id 
+                WHERE t.librarian_id = ? 
+                  AND t.accion = 'Prestamo' 
+                  AND b.estado = 'Prestado' 
+                  AND t.fecha_devolucion_real IS NULL
+            ");
+            $stmt_chk_issued->execute([$id]);
+            $has_active_issued = ((int)$stmt_chk_issued->fetchColumn() > 0);
+
+            if ($has_active_borrowed) {
+                $_SESSION['error_msg'] = "No se puede eliminar al usuario '{$u_data['nombre']}' porque tiene libros prestados pendientes de devolución. Primero debe registrarse la devolución de sus libros.";
+            } elseif ($has_active_issued) {
+                $_SESSION['error_msg'] = "No se puede eliminar al bibliotecario '{$u_data['nombre']}' porque tiene préstamos activos en curso sin devolver. Primero debes registrar la devolución de esos libros.";
             } else {
+                // 3. No tiene préstamos activos: desvincular suavemente y conservar el log histórico intacto
+                $pdo->beginTransaction();
+
+                // Asegurar que las transacciones históricas conserven el nombre del bibliotecario y lector
+                $pdo->prepare("UPDATE transactions SET librarian_nombre = ? WHERE librarian_id = ? AND (librarian_nombre IS NULL OR librarian_nombre = '')")->execute([$u_data['nombre'], $id]);
+                $pdo->prepare("UPDATE transactions SET lector_nombre = ? WHERE user_id = ? AND (lector_nombre IS NULL OR lector_nombre = '')")->execute([$u_data['nombre'], $id]);
+
+                // Desvincular las referencias de clave foránea a NULL para no destruir el historial
+                $pdo->prepare("UPDATE transactions SET librarian_id = NULL WHERE librarian_id = ?")->execute([$id]);
+                $pdo->prepare("UPDATE transactions SET user_id = NULL WHERE user_id = ?")->execute([$id]);
+
+                // Eliminar la cuenta de usuario
                 $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
-                $_SESSION['success_msg'] = "Usuario eliminado exitosamente.";
+
+                $pdo->commit();
+                $_SESSION['success_msg'] = "Usuario '{$u_data['nombre']}' eliminado con éxito. El historial de préstamos y devoluciones se conservó intacto en el log.";
             }
         } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $_SESSION['error_msg'] = "Error al eliminar usuario: " . $e->getMessage();
         }
     } else {
