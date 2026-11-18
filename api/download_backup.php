@@ -11,9 +11,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'Administrador') {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'] ?? '', ['Administrador', 'Bibliotecario'])) {
     http_response_code(403);
-    exit("Acceso denegado. Se requiere rol de Administrador.");
+    exit("Acceso denegado. Se requiere rol de Administrador o Bibliotecario.");
 }
 
 $file = isset($_GET['file']) ? basename($_GET['file']) : '';

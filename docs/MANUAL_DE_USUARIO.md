@@ -56,7 +56,7 @@ El sistema implementa un modelo de **Control de Acceso Basado en Roles (RBAC)** 
 | **Eliminar Libros (Sin préstamos activos)**| ❌ No | ✅ Sí | ✅ Sí |
 | **Administrar Materias, Autores y Editoriales** | ❌ No | ✅ Sí | ✅ Sí |
 | **Gestionar Cuentas de Usuarios** | ❌ No | ❌ No | ✅ Sí |
-| **Generar y Descargar Copias de Seguridad**| ❌ No | ❌ No | ✅ Sí |
+| **Generar y Descargar Copias de Seguridad**| ❌ No | ✅ Sí | ✅ Sí |
 | **Restaurar Base de Datos** | ❌ No | ❌ No | ✅ Sí |
 
 ---

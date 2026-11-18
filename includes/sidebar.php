@@ -23,7 +23,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <?php endif; ?>
                 <?php if (($_SESSION['user_role'] ?? '') === 'Administrador'): ?>
                 <li><a href="users.php" class="<?php echo ($current_page == 'users.php') ? 'active' : ''; ?>">Usuarios</a></li>
-                <li><a href="db_tools.php" class="<?php echo ($current_page == 'db_tools.php') ? 'active' : ''; ?>">Importar Datos / Respaldo</a></li>
+                <?php endif; ?>
+                <?php if (in_array($_SESSION['user_role'] ?? '', ['Administrador', 'Bibliotecario'])): ?>
+                <li><a href="db_tools.php" class="<?php echo ($current_page == 'db_tools.php') ? 'active' : ''; ?>"><?php echo ($_SESSION['user_role'] === 'Administrador') ? 'Importar Datos / Respaldo' : 'Copias de Seguridad'; ?></a></li>
                 <?php endif; ?>
                 <?php if (!empty($_SESSION['user_id'])): ?>
                 <li><a href="../logout.php">Cerrar Sesión</a></li>

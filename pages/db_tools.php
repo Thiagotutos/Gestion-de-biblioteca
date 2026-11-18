@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-if ($_SESSION['user_role'] !== 'Administrador') {
+if (!in_array($_SESSION['user_role'] ?? '', ['Administrador', 'Bibliotecario'])) {
     header('Location: dashboard.php');
     exit;
 }
@@ -154,7 +154,7 @@ $totalStored = count($storedBackups);
 <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
 
 <div class="content-header">
-    <h2>Importar Datos y Copia de Seguridad</h2>
+    <h2><?php echo ($_SESSION['user_role'] === 'Administrador') ? 'Importar Datos y Copia de Seguridad' : 'Copias de Seguridad y Respaldo'; ?></h2>
 </div>
 
 <?php if (isset($_SESSION['success_msg'])): ?>
